@@ -5,7 +5,7 @@ layout: default
 Text can be **bold**, _italic_, or ~~strikethrough~~.
 
 [Link to another page](another-page).
-[Ling to first page](first-page).
+[Link to first page](https://chendongqi.github.io/blog/docs/first-page.md).
 
 There should be whitespace between paragraphs.
 
