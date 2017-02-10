@@ -71,7 +71,7 @@ ga_domain: chendongqi.github.io/blog
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "男儿生来胆气豪，<br>轻踏石浪似平遥，<br>信步九州归来日，<br>谁与吾君解战袍。"
-sidebar-avatar: img/avatar-cheson.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: https://chendongqi.github.io/blog/img/avatar-cheson.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
