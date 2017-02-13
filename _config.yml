@@ -37,6 +37,7 @@ gems: [jekyll-paginate]
 
 
 
+
 # Markdown settings
 # replace redcarpet to kramdown,
 # although redcarpet can auto highlight code, the lack of header-id make the catalog impossible, so I switch to kramdown
@@ -44,18 +45,16 @@ gems: [jekyll-paginate]
 markdown: kramdown
 kramdown:
   input: GFM                            # use Github Flavored Markdown !important
-#markdown: redcarpet
-#redcarpet:
-#    extensions: ["fenced_code_blocks", "autolink", "tables", "strikethrough"]
+
 
 
 # Disqus settings
-#disqus_username: _your_disqus_short_name_
+disqus_username: chendongqi
 
 # Duoshuo settings
-#duoshuo_username: null
+duoshuo_username: chendongqi
 # Share component is depend on Comment so we can NOT use share only.
-#duoshuo_share: true                     # set to false if you want to use Comment without Sharing
+duoshuo_share: true                     # set to false if you want to use Comment without Sharing
 
 
 
@@ -80,12 +79,6 @@ sidebar-avatar: https://chendongqi.github.io/blog/img/website/avatar-cheson.jpg 
 # Featured Tags
 featured-tags: true                     # whether or not using Feature-Tags
 featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
-
-
-
-# Progressive Web Apps
-chrome-tab-theme-color: "#000000"
-service-worker: true
 
 
 
