@@ -1,7 +1,7 @@
 # Site settings
 title: Cheson Blog
 SEOTitle: Cheson的博客 | Cheson Blog
-header-img: img/home-bg.jpg
+header-img: img/website/home-bg.jpg
 email: chendongqi2007@gmail.com
 description: "这里是Cheson的个人博客，Android技术探究的原创世界"
 keyword: "Cheson @Cheson cheson @cheson chendongqi @chendongqi Android系统 异常 性能 电源 框架 Exception Performance Power Framework"
@@ -71,7 +71,7 @@ ga_domain: chendongqi.github.io/blog
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "男儿生来胆气豪，<br>轻踏石浪似平遥，<br>信步九州归来日，<br>谁与吾君解战袍。"
-sidebar-avatar: https://chendongqi.github.io/blog/img/avatar-cheson.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: https://chendongqi.github.io/blog/img/website/avatar-cheson.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
