@@ -20,9 +20,9 @@ sudo apt-get install gem
 参考该文：[Ubuntu下Ruby1.9/2.0版本切换](http://www.panxw.com/posts/ububtu-ruby2-install.html)
 其中gem pristime --all这句command会提示找不到pristime命令，无所谓不用管
 安装nodejs
-```
+```java
 sudo apt-get install nodejs
-```
+```c
 安装jekyll
 ```
 sudo jem install jekyll
