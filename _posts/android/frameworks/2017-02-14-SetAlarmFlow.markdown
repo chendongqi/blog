@@ -79,7 +79,9 @@ private void setImpl(int type, long triggerAtMillis, long windowMillis, long int
 #### 4.1 set
 
 &emsp;&emsp;代码通过binder调用到了AlarmManagerService中的set方法，这里都是在对flag进行处理加工:
+
 1. 不允许所有的调用者使用WAKE_FROM_IDLE和ALLOW_WHILE_IDLE_UNRESTRICTED
+
 
 ```java
 // No incoming callers can request either WAKE_FROM_IDLE or
@@ -87,7 +89,9 @@ private void setImpl(int type, long triggerAtMillis, long windowMillis, long int
 flags &= ~(AlarmManager.FLAG_WAKE_FROM_IDLE
     | AlarmManager.FLAG_ALLOW_WHILE_IDLE_UNRESTRICTED);
 ```
+
 2. 如果不是System进程，则不允许使用FLAG_IDLE_UNTIL
+
 
 ```java
 // Only the system can use FLAG_IDLE_UNTIL -- this is used to tell the alarm
@@ -96,7 +100,9 @@ if (callingUid != Process.SYSTEM_UID) {
     flags &= ~AlarmManager.FLAG_IDLE_UNTIL;
 }
 ```
+
 3. 如果是system核心模块并且workSource为null，则添加FLAG_ALLOW_WHILE_IDLE_UNRESTRICTED标记，允许在idle模式下执行
+
 
 ```java
 // If the caller is a core system component, and not calling to do work on behalf
@@ -107,7 +113,9 @@ if (callingUid < Process.FIRST_APPLICATION_UID && workSource == null) {
     flags |= AlarmManager.FLAG_ALLOW_WHILE_IDLE_UNRESTRICTED;
 }
 ```
+
 4. 如果设置的是精准alarm，则添加FLAG_STANDALONE标记，使其不允许被重新安排
+
 
 ```java
 // If this is an exact time alarm, then it can't be batched with other alarms.
@@ -115,11 +123,13 @@ if (windowLength == AlarmManager.WINDOW_EXACT) {
     flags |= AlarmManager.FLAG_STANDALONE;
 }
 ```
+
 5. 如果该alarm是个闹钟，则添加FLAG_WAKE_FROM_IDLE和FLAG_STANDALONE标记，使其为精准闹钟，并且可以在idle时唤醒
+
 
 ```java
 // If this alarm is for an alarm clock, then it must be standalone and we will
-    // use it to wake early from idle if needed.
+// use it to wake early from idle if needed.
 if (alarmClock != null) {
     flags |= AlarmManager.FLAG_WAKE_FROM_IDLE | AlarmManager.FLAG_STANDALONE;
 }
@@ -355,5 +365,8 @@ if (whichBatch < 0) {// 为这个alarm新建一个batch
 ### 6. 功耗优化思路
 
 &emsp;&emsp;进一步做Alarm相关功耗优化时可以有两个思路：
+
 1. 对不精准alarm，可以在原先的基础上再增加maxElapsed的时间，如此可以增大alarm被分到batch中去概率
+
 2. 一个batch中拥有IM应用的alarm时，增大这个batch的end time，如此可以增加这个batch容纳alarm的能力。
+
