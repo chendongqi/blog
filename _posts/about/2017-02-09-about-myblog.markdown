@@ -5,6 +5,7 @@ subtitle:   "小站简介"
 navcolor:   "invert"
 date:       2017-02-09
 author:     "Cheson"
+catalog: true
 tags:
     - 前端
 ---

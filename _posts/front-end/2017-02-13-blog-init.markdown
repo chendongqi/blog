@@ -5,6 +5,7 @@ subtitle:   "用jekyll+GitHub搭建个人站点"
 navcolor:   "invert"
 date:       2017-02-13
 author:     "Cheson"
+catalog: true
 tags:
     - 前端
 ---
