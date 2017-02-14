@@ -1,44 +1,105 @@
 ---
 layout:     post
 title:      "第一次搭建个人主页"
-subtitle:   "用jekyll+GitHub搭建个人站点"
+subtitle:   "用jekyll+GitHub Page搭建个人站点"
 navcolor:   "invert"
 date:       2017-02-13
 author:     "Cheson"
+header-img: "/img/website/home-bg.jpg"
 catalog: true
 tags:
     - 前端
+    - jekyll
+    - GitHub Page
+    
 ---
 
 ## 一、使用Jekyll搭建个人本地博客网站
+
 首先是使用jekyll搭建本地站点
-#### 1、安装jekyll
+
+### 1、安装jekyll
+
 安装gem
-```Bash
+
+```Shell
 sudo apt-get install gem
 ```
+
 安装ruby2.0（旧的版本后面会安装jekyll时会提示无法安装）
 参考该文：[Ubuntu下Ruby1.9/2.0版本切换](http://www.panxw.com/posts/ububtu-ruby2-install.html)
 其中gem pristime --all这句command会提示找不到pristime命令，无所谓不用管
 安装nodejs
-```java
+
+```Shell
 sudo apt-get install nodejs
-```c
+```
+
 安装jekyll
+
+```Shell
+sudo gem install jekyll
 ```
-sudo jem install jekyll
-```
+
 安装bundler
-```
+
+```Shell
 sudo gem install bundler
+
 ```
-#### 2、用jekyll创建新站点
-```
+
+### 2、用jekyll创建新站点
+
+```Shell
 jekyll new <site-name>
 ```
-#### 3、启动jekyll服务
-```
+
+### 3、启动jekyll服务
+
+```Shell
 cd <site-name>
 jekyll server
 ```
+
 ![Jekyll执行成功](https://chendongqi.github.io/blog/img/2017-02-13-blog-init/jekyll_server.png)
+
+### 4、在浏览器预览网站效果
+
+地址栏访问[127.0.0.1:4000](127.0.0.1:4000)或者是[http://localhost:4000](http://localhost:4000)
+
+### 5、站点主题美化
+
+可以在网上找一些现成设计美观的站点的代码来做为模板修改，例如[huxpro的主题](huxpro.github.io)
+
+## 二、使用github page建立个人站点
+
+### 1、登陆[github](github.com)
+
+你得先有一个github的账号
+
+### 2、创建仓库
+
+选择New repository创建
+![New Repository](https://chendongqi.github.io/blog/img/2017-02-13-blog-init/new_repository.png)
+
+### 3、填写相关信息，根据自己的情况来
+
+![New Repository Info](https://chendongqi.github.io/blog/img/2017-02-13-blog-init/new_repository_information.png)
+
+### 4、创建成功，点击Settings按钮进入设置界面
+
+![Repository Settings](https://chendongqi.github.io/blog/img/2017-02-13-blog-init/setting_repository.png)
+需要注意的为两处，source选择master branch并save，Custom domain这一栏为填写域名的，比如你注册了自己的域名，填写在这里时，就可以通过你的域名访问到github page上的这个站点了。否则需要通过GitHub Pages给出的默认地址来访问，例如这里为https://chendongqi.github.io/cheson.github.io/
+![Repository Settings Info](https://chendongqi.github.io/blog/img/2017-02-13-blog-init/setting_repository_information.png)
+
+### 5、拉取分支到本地
+
+用git clone将这个库拉到本地
+![Get Repository](https://chendongqi.github.io/blog/img/2017-02-13-blog-init/get_repository.png)
+然后将之前用jekyll创建出来的本地站点中的代码都merge到这个库中，并提交到github上，这样本地站点的信息就都同步到github上了
+后续的调试方式就是在本地修改，然后查看本地效果，再push到github上，再确认远程效果
+
+## 三、写文章
+
+jekyll的规则是文章都会放在_post目录下，建议用markdown来作为编辑语言，而markdown的编辑器也有很多，例如在线的[Dillinger](http://dillinger.io/)，本地的编辑器可以在网上找。
+编辑完之后文件的命名规则为xxxx-xx-xx-names.md，例如2017-02-09-other-welcome.md，然后放在_post目录下就自动成为发布的文章了
