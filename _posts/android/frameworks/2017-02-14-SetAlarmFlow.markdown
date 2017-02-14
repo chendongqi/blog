@@ -80,7 +80,7 @@ private void setImpl(int type, long triggerAtMillis, long windowMillis, long int
 
 &emsp;&emsp;代码通过binder调用到了AlarmManagerService中的set方法，这里都是在对flag进行处理加工:
 
-1. 不允许所有的调用者使用WAKE_FROM_IDLE和ALLOW_WHILE_IDLE_UNRESTRICTED
++ 不允许所有的调用者使用WAKE_FROM_IDLE和ALLOW_WHILE_IDLE_UNRESTRICTED
 
 
 ```java
@@ -90,7 +90,7 @@ flags &= ~(AlarmManager.FLAG_WAKE_FROM_IDLE
     | AlarmManager.FLAG_ALLOW_WHILE_IDLE_UNRESTRICTED);
 ```
 
-2. 如果不是System进程，则不允许使用FLAG_IDLE_UNTIL
++ 如果不是System进程，则不允许使用FLAG_IDLE_UNTIL
 
 
 ```java
@@ -101,7 +101,7 @@ if (callingUid != Process.SYSTEM_UID) {
 }
 ```
 
-3. 如果是system核心模块并且workSource为null，则添加FLAG_ALLOW_WHILE_IDLE_UNRESTRICTED标记，允许在idle模式下执行
++ 如果是system核心模块并且workSource为null，则添加FLAG_ALLOW_WHILE_IDLE_UNRESTRICTED标记，允许在idle模式下执行
 
 
 ```java
@@ -114,7 +114,7 @@ if (callingUid < Process.FIRST_APPLICATION_UID && workSource == null) {
 }
 ```
 
-4. 如果设置的是精准alarm，则添加FLAG_STANDALONE标记，使其不允许被重新安排
++ 如果设置的是精准alarm，则添加FLAG_STANDALONE标记，使其不允许被重新安排
 
 
 ```java
@@ -124,7 +124,7 @@ if (windowLength == AlarmManager.WINDOW_EXACT) {
 }
 ```
 
-5. 如果该alarm是个闹钟，则添加FLAG_WAKE_FROM_IDLE和FLAG_STANDALONE标记，使其为精准闹钟，并且可以在idle时唤醒
++ 如果该alarm是个闹钟，则添加FLAG_WAKE_FROM_IDLE和FLAG_STANDALONE标记，使其为精准闹钟，并且可以在idle时唤醒
 
 
 ```java
