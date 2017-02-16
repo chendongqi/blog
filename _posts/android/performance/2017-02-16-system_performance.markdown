@@ -42,6 +42,7 @@ private final int[] mOomMinFreeHigh = new int[] {
         73728, 92160, 110592,
         129024, 147456, 184320
 };
+修改成
 ```
 
 ```java
@@ -85,7 +86,9 @@ long getCachedRestoreThresholdKb() {
 ### 2. ZRAM配置
 
 关于ZRAM的技术介绍参考[ZRAM简介](http://kernel.meizu.com/zram-introduction.html)，这里介绍在MTK平台上的配置方法。
+
 **配置脚本**
+
 修改文件device/mediatek/<project>/enableswap.sh，方案如下：
 
 ```Bash
@@ -100,6 +103,7 @@ echo 60 > /sys/fs/cgroup/memory/sw/memory.swappiness // from 100-->60
 ```
 
 **Adjust swappniess（虚拟内存管理中，换页频繁）**
+
 修改文件/kernel/drivers/staging/android/lowmemorykiller.c
 
 ```C
