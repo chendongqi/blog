@@ -3,7 +3,7 @@ layout:      post
 title:      "Android性能优化之System Performance"
 subtitle:   "Android整机项目中整机系统性能的优化"
 navcolor:   "invert"
-date:       2017-02-14
+date:       2017-02-16
 author:     "Cheson"
 header-img: "/img/website/home-bg.jpg"
 catalog: true
