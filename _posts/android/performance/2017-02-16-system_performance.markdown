@@ -42,8 +42,8 @@ private final int[] mOomMinFreeHigh = new int[] {
         73728, 92160, 110592,
         129024, 147456, 184320
 };
-修改成
 ```
+修改成
 
 ```java
 private final int[] mOomMinFreeHigh = new int[] {
