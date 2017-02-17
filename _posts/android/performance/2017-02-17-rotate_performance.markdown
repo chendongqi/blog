@@ -231,6 +231,7 @@ index 409b321..03cc6e7 100644
          }
 ```
 **第二个方案是去除旋转动画**:在WindowManagerService中修改static final boolean CUSTOM_SCREEN_ROTATION = true为false，慎用，自测UX效果较差，但是速度确实快。
+
 **第三个方案是对Activity的生命周期优化**:
 切换到横屏时Activity的生命周期会打印如下：
 
@@ -285,7 +286,7 @@ onConfigurationChange
 
 2. 设置Activity的android:configChanges="orientation"时，切屏还是会重新调用各个生命周期，切横、竖屏时只会执行一次
 
-3. 设置Activity的android:configChanges="orientation|keyboardHidden"时，切屏不会重新调用各个生命周期，只会执行onConfigurationChanged方法
+3. 设置Activity的android:configChanges="orientation | keyboardHidden"时，切屏不会重新调用各个生命周期，只会执行onConfigurationChanged方法
 
 ### 4. AW875 ACER上的转屏问题经验（ALPS02577316）
 
