@@ -5,7 +5,6 @@ subtitle:   "用AlarmManager设置一个Alarm"
 navcolor:   "invert"
 date:       2017-02-14
 author:     "Cheson"
-header-img: "https://chendongqi.github.io/blog/img/website/home-bg.jpg"
 catalog: true
 tags:
     - Android

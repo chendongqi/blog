@@ -5,7 +5,7 @@ subtitle:   "从代码角度理解alarm的设置流程"
 navcolor:   "invert"
 date:       2017-02-14
 author:     "Cheson"
-header-img: "https://chendongqi.github.io/blog/img/website/home-bg.jpg"
+#header-img: "https://chendongqi.github.io/blog/img/website/home-bg.jpg"
 catalog: true
 tags:
     - Android
