@@ -5,7 +5,7 @@ subtitle:   "Android整机项目中开机速度优化"
 navcolor:   "invert"
 date:       2017-02-16
 author:     "Cheson"
-header-img: "/img/website/home-bg.jpg"
+header-img: "https://chendongqi.github.io/blog/img/website/home-bg.jpg"
 catalog: true
 tags:
     - Android
