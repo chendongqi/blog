@@ -66,18 +66,31 @@ systrace.py -list
 来取得
 ![TAG list](https:chendongqi.github.io/blog/img/2017-02-18-systrace_base/tag_list.png)
 而图形界面下就方便很多，直接给你列出来做勾选就可以，各个TAG的含义如下：
+
 --这三个是cpu信息，必须带上
+
     freq sched idle
+
 --测试列表滑动，桌面滑动等流畅性问题
+
 &emsp;&emsp;    gfx input view
+
 --若在上面基础上还需要分析HWUI
+
 &emsp;&emsp;    gfx input view hwui
+
 --测试app启动或者进入某个界面速度
+
 &emsp;&emsp;    gfx input view am wm res
+
 --怀疑有GC或者IO导致卡顿
+
 &emsp;&emsp;    gfx input view dalvik disk
+
 --怀疑有power相关，量灭屏慢等
+
 &emsp;&emsp;    gfx inpu view res am wm power
+
 
 ### 3. systrace的打开方式
 
@@ -99,13 +112,16 @@ W和S--缩放
 ![operate tool](https:chendongqi.github.io/blog/img/2017-02-18-systrace_base/operate_tool.png)
 从上至下以此为选择、移动、缩放和测量(时间间隔)的工具，需要先选中，后使用。
 
-#### 4. 如何分析
+### 4. 如何分析
 
 已经介绍了抓取和打开systrace以及几个基本的操作，那么如何使用systrace来分析问题呢？这是个非常大且困难的课题，也是我本人学习系统异常、性能等问题分析以来遇到的最艰涩的一种分析手段。
 我也就我至今接触和掌握比较熟练的两个例子来做部分的介绍，可以参考：
 后续补充:
+
 ---应用启动时间分析
+
 ----drag动作耗时分析
+
 
 
 
