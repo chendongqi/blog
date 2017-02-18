@@ -16,6 +16,7 @@ tags:
 ### 适用平台
 
 Android Version： 6.0及以上
+
 Platform： 通用
 
 ### 1. 分析前准备
@@ -116,11 +117,11 @@ W和S--缩放
 
 已经介绍了抓取和打开systrace以及几个基本的操作，那么如何使用systrace来分析问题呢？这是个非常大且困难的课题，也是我本人学习系统异常、性能等问题分析以来遇到的最艰涩的一种分析手段。
 我也就我至今接触和掌握比较熟练的两个例子来做部分的介绍，可以参考：
-后续补充:
 
----应用启动时间分析
 
-----drag动作耗时分析
+----[Android性能优化之Systrace分析app启动分析](_posts/android/performance/2017-02-18-systrace_appLauncher.markdown)
+
+----[Android性能优化之Systrace分析drag响应时间]((_posts/android/performance/2017-02-18-systrace_drag.markdown)
 
 
 
