@@ -762,7 +762,7 @@ adb shell setprop service.bootanim.exit 1//结束关机动画
         PowerManagerService.lowLevelShutdown();
     }
 ```   
-&emsp;&emsp;如果是重启，则调用lowLevelReboot，否则执行震动，并调用lowLevelShutdown来关机。这里需要说明的是，不管是重启还是关机，最后都是使用SystemProperties写系统属性的方式来实现的。这里也可以用adb命令来效仿。例如烧版本异常无法关机，但是adb依旧可以连接的情况，可以用命令adb shell setprop sys.powerctl shutdown来执行关机掉电。    
+&emsp;&emsp;如果是重启，则调用lowLevelReboot，否则执行震动，并调用lowLevelShutdown来关机。这里需要说明的是，不管是重启还是关机，最后都是使用SystemProperties写系统属性的方式来实现的。这里也可以用adb命令来效仿。**例如烧版本异常无法关机，但是adb依旧可以连接的情况，可以用命令adb shell setprop sys.powerctl shutdown来执行关机掉电**。    
 &emsp;&emsp;至此，所有关机动作都已完成。    
 
 #### 3.3 本章小结
