@@ -36,11 +36,11 @@ Platform： MTK6580/MTK6735/MTK6753
 
 &emsp;&emsp;首先来弄明白Bootloader到底是什么东西？抽象的说，Bootloader是在操作系统运行之前运行的一段程序，它可以将系统的软硬件环境带到一个合适状态，为运行操作系统做好准备。它的终极任务就是把OS带起来。    
 &emsp;&emsp;在嵌入式系统的世界里，存在各种各样的Bootloader，划分方式有根据处理器的体系结构，也有功能的复杂程度。对于不同的体系结构都有一些可选的Bootloader源码可以选择：    
-1) X86：X86的工作站和服务器上一般使用LILO和GRUB。    
-2) ARM：最早有为ARM720处理器开发板所做的固件，又有了armboot，StrongARM平台的blob，还有S3C2410处理器开发板上的vivi等。现在armboot已经并入了U-Boot，所以U-Boot也支持ARM/XSCALE平台。U-Boot已经成为ARM平台事实上的标准Bootloader。    
-3) PowerPC：最早使用于ppcboot，不过现在大多数直接使用U-boot。    
-4) MIPS：最早都是MIPS开发商自己写的bootloader，不过现在U-boot也支持MIPS架构。    
-5) M68K：Redboot能够支持m68k系列的系统。    
+1. X86：X86的工作站和服务器上一般使用LILO和GRUB。    
+2. ARM：最早有为ARM720处理器开发板所做的固件，又有了armboot，StrongARM平台的blob，还有S3C2410处理器开发板上的vivi等。现在armboot已经并入了U-Boot，所以U-Boot也支持ARM/XSCALE平台。U-Boot已经成为ARM平台事实上的标准Bootloader。    
+3. PowerPC：最早使用于ppcboot，不过现在大多数直接使用U-boot。    
+4. MIPS：最早都是MIPS开发商自己写的bootloader，不过现在U-boot也支持MIPS架构。    
+5. M68K：Redboot能够支持m68k系列的系统。    
 &emsp;&emsp;在这里我们讨论下ARM架构的Bootloader。
 
 #### 1.2 Arm特定平台的Bootloader
@@ -59,13 +59,13 @@ Platform： MTK6580/MTK6735/MTK6753
 &emsp;&emsp;在MPCore（常用的一种ARM架构）中，每个ARM的处理器开始的存储地址都是0x00000000，通常有两种方式来提供程序代码执行：1）NOR Flash；2）Boot ROM。由于NOR Flash单位的存储成本比较高，所以当涉及到大容量存储空间的产品时，会选择用NAND Flash来存储Bootloader和操作系统，为了让操作系统能够启动，就会通过芯片上的Boot ROM定位到地址0x00000000，并在启动存储MPCore的程序代码。    
 &emsp;&emsp;在系统未启动时，只有RTC Clock的时钟脉冲为32.768KHz，而在系统启动时，在PLL（Phase Locked Loop）起震前，只有Boot ROM或是NOR Flash这类设备可以用来执行处理器的指令。因此，在Boot ROM或NOR Flash中的代码必须让系统PLL正常，以便于可以达到最佳的处理器和平台性能。,在系统初始化外部存储（DRAM）之前，所使用的Stack或是可写入的存储区域就必须是芯片内部存储（SRAM），直到DRAM被初始化后才可以被使用。    
 &emsp;&emsp;从支持NAND Boot的行为来说，Boot Rom需要执行以下操作：    
-1) 让CPU0执行主要开机流程，其他的处理器进入WFI（在启动时，每个处理器可以通过CPU ID得知自己是否为CPU0，如果不是就进入WFI的程序代码中）    
-2) 初始化外部存储和执行系统的初始化       
-3) 设定Stack    
-4) 把BootRom程序复制到外部存储中    
-5) 重新定位存储位置，把0x00000000地址对应到外部存储中    
-6) 把第二阶段的Bootloader载入到外部存储或者CPU内部存储中。    
-7) 执行第二阶段的Bootloader    
+1. 让CPU0执行主要开机流程，其他的处理器进入WFI（在启动时，每个处理器可以通过CPU ID得知自己是否为CPU0，如果不是就进入WFI的程序代码中）    
+2. 初始化外部存储和执行系统的初始化       
+3. 设定Stack    
+4. 把BootRom程序复制到外部存储中    
+5. 重新定位存储位置，把0x00000000地址对应到外部存储中    
+6. 把第二阶段的Bootloader载入到外部存储或者CPU内部存储中。    
+7. 执行第二阶段的Bootloader    
 &emsp;&emsp;在MTK的Bootloader方案中，加入了preloader，它是MTK 内部的一个loader，其主要作用在于：1）保护芯片避免被黑；2）准备代码执行的安全环境；3）包含了许多安全功能和一些安全检查的步骤；4）加载和启动U-Boot
 ![mtk_bootloader](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/mtk_bootloader.png)
 
@@ -81,12 +81,11 @@ Platform： MTK6580/MTK6735/MTK6753
 &emsp;&emsp;可以看到init进程的pid是1。
 ![android_boot_flow](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/android_boot_flow.png)
 &emsp;&emsp;从这张图Android启动流程图中可以看出init进程需要做的事情有：    
-1) fork出一些系统关键服务（如mediaserver、servicemanager等）    
-2) fork出zygote    
-3) 提供属性服务来管理系统属性    
+1. fork出一些系统关键服务（如mediaserver、servicemanager等）    
+2. fork出zygote    
+3. 提供属性服务来管理系统属性    
 &emsp;&emsp;下面我们从代码角度来具体看看init线程都做了哪些事情。Init的代码位于system/core/init目录下，先来看init.cpp文件。在这个文件的main方法中可以初探端倪，以下代码为MTK AOSP Android6.0。    
-1) 将kernel启动过程中建立好的文件系统框架mount到相应目录
-
+1. 将kernel启动过程中建立好的文件系统框架mount到相应目录   
 ```cpp
     mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755");
     mkdir("/dev/pts", 0755);
@@ -95,11 +94,10 @@ Platform： MTK6580/MTK6735/MTK6753
     mount("proc", "/proc", "proc", 0, NULL);
     mount("sysfs", "/sys", "sysfs", 0, NULL);
 ```
-2) 调用util.cpp的open_devnull_stdio方法，用来将init进程的标准输入、输出、出错设备设置为新建的设备节点/dev/__null__。    
-3) 调用klog_init()和klog_set_level(KLOG_NOTICE_LEVEL)方法创建并打开设备节点/dev/__kmsg__来作为kernel log的输出节点。    
-4) 调用selinux_initialize方法来建立SELinux，如果处于内核空间则同时加载SELinux策略。    
-5) 调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。        
-
+2. 调用util.cpp的open_devnull_stdio方法，用来将init进程的标准输入、输出、出错设备设置为新建的设备节点/dev/__null__。    
+3. 调用klog_init()和klog_set_level(KLOG_NOTICE_LEVEL)方法创建并打开设备节点/dev/__kmsg__来作为kernel log的输出节点。    
+4. 调用selinux_initialize方法来建立SELinux，如果处于内核空间则同时加载SELinux策略。    
+5. 调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。        
 ```cpp
     // Write to signal_write_fd if we catch SIGCHLD.
     struct sigaction act;
@@ -111,11 +109,9 @@ Platform： MTK6580/MTK6735/MTK6753
     reap_any_outstanding_children();
 
     register_epoll_handler(signal_read_fd, handle_signal);
-```
-
-6) 调用property_service.cpp的property_load_boot_defaults方法从文件中加载默认启动属性    
-7) 调用start_property_service方法，创建Property服务建立socket通信，并开始监听属性服务请求    
-
+```    
+6. 调用property_service.cpp的property_load_boot_defaults方法从文件中加载默认启动属性    
+7. 调用start_property_service方法，创建Property服务建立socket通信，并开始监听属性服务请求     
 ```cpp
     void start_property_service() {
         property_set_fd = create_socket(PROP_SERVICE_NAME, SOCK_STREAM | SOCK_CLOEXEC |             SOCK_NONBLOCK, 0666, 0, 0, NULL);
@@ -127,15 +123,13 @@ Platform： MTK6580/MTK6735/MTK6753
         listen(property_set_fd, 8);
         register_epoll_handler(property_set_fd, handle_property_set_fd);
     }
-```
+```    
 &emsp;&emsp;到这里也就是init线程提供的属性服务了。    
-8) 然后就是启动init.rc中定义的服务，这里分为几个步骤。首先是解析init.rc文件：    
-
+8. 然后就是启动init.rc中定义的服务，这里分为几个步骤。首先是解析init.rc文件：      
 ```cpp
     init_parse_config_file("/init.rc");
 ```    
-&emsp;&emsp;接下来就是根据init.rc中定义的不同触发器类型的服务都加入到service_list中，这里并不启动服务。    
-
+&emsp;&emsp;接下来就是根据init.rc中定义的不同触发器类型的服务都加入到service_list中，这里并不启动服务。      
 ```cpp
     action_for_each_trigger("early-init", action_add_queue_tail);
     // Trigger all the boot actions to get us started.
@@ -147,10 +141,8 @@ Platform： MTK6580/MTK6735/MTK6753
     } else {
         action_for_each_trigger("late-init", action_add_queue_tail);
     }
-```
-
-&emsp;&emsp;启动服务在builtins.c中：    
-
+```    
+&emsp;&emsp;启动服务在builtins.c中：       
 ```cpp
     int do_class_start(int nargs, char **args)
     {
@@ -161,9 +153,8 @@ Platform： MTK6580/MTK6735/MTK6753
         service_for_each_class(args[1], service_start_if_not_disabled);
         return 0;
     }
-```    
-&emsp;&emsp;然后在init_parser.cpp中的service_for_each_class方法中遍历service_list中的所有class，将非disabled的服务启动起来。    
-
+```        
+&emsp;&emsp;然后在init_parser.cpp中的service_for_each_class方法中遍历service_list中的所有class，将非disabled的服务启动起来。      
 ```cpp
     void service_for_each_class(const char *classname,
                             void (*func)(struct service *svc))
@@ -177,10 +168,9 @@ Platform： MTK6580/MTK6735/MTK6753
             }
         }
     }
-```    
+```     
 &emsp;&emsp;到这里就是init线程启动众多服务的过程了，服务的定义还需要参考init.rc	能够更好的理解。    
-9) 到这里init就进入了死循环中一直在监听ufds中的4个文件描述符的动静，如果有POLLIN的事件，就做相应的处理，所以init并没有退出或者进入idle，而是被当做一个服务在运行。    
-
+9. 到这里init就进入了死循环中一直在监听ufds中的4个文件描述符的动静，如果有POLLIN的事件，就做相应的处理，所以init并没有退出或者进入idle，而是被当做一个服务在运行。       
 ```cpp
     while (true) {
         if (!waiting_for_exec) {
@@ -215,16 +205,14 @@ Platform： MTK6580/MTK6735/MTK6753
 
 &emsp;&emsp;init.rc的一类文件在目录system/core/rootdir下。在device/<vendor>/<project>目录下也可以做init.rc的客制化，一般名称为init.<project>.rc。    
 &emsp;&emsp;init.rc由许多的Action和Service组成。每一个语句占据一行，并且各个关键字被空格分开，由#（前面允许有空格）开始的行都是注释行(comment)，一个actions或services的开始隐含声明了一个新的段，所有commands或options属于最近的声明。在第一个段之前的commands或options都会被忽略。每一个actions和services都有不同的名字。后面与前面发生重名的，那么这个后面重名的将被忽略或被认为是一个错误。    
-&emsp;&emsp;我们先来看下actions的例子：actions其实就是一组被命名的命令序列。actions都有一个触发条件，触发条件决定了action何时执行。当一个事件发生如果匹配action的触发条件，那么这个action将会被添加到预备执行队列的尾部（除非它已经在队列当中）。每一个action中的命令将被顺序执行，actions的格式如下：    
-
+&emsp;&emsp;我们先来看下actions的例子：actions其实就是一组被命名的命令序列。actions都有一个触发条件，触发条件决定了action何时执行。当一个事件发生如果匹配action的触发条件，那么这个action将会被添加到预备执行队列的尾部（除非它已经在队列当中）。每一个action中的命令将被顺序执行，actions的格式如下：       
 ```bash
     on <trigger>
     <command>
     <command>
 	...
-```    
-&emsp;&emsp;例如init.rc中的例子：    
-
+```      
+&emsp;&emsp;例如init.rc中的例子：      
 ```bash
     on early-init
     # Set init and its forked children's oom_adj.
@@ -234,19 +222,17 @@ Platform： MTK6580/MTK6735/MTK6753
     restorecon /adb_keys
 
     start ueventd
-```    
+```      
 &emsp;&emsp;Trigger就是触发条件，标示command执行的时机，具体想了解一共有多少种trigger可以参见资料[ init.rc文件介绍 ](http://note.youdao.com/share/?id=23eed5feb131afe2f167d69bce56c841&type=note)。    
 &emsp;&emsp;services是一些由init启动和重新（如果有需要）启动的程序，当然这些程序如果是存在的。    
-&emsp;&emsp;每一个service格式如下：    
-
+&emsp;&emsp;每一个service格式如下：      
 ```bash
     service <name> <pathname> [ <argument> ]*
     <option>
     <option>
     ...
-```    
-&emsp;&emsp;例如：    
-
+```      
+&emsp;&emsp;例如：      
 ```bash
     service media /system/bin/mediaserver
         class main
@@ -261,7 +247,7 @@ Platform： MTK6580/MTK6735/MTK6753
         group graphics audio
         disabled
         oneshot
-```
+```     
 &emsp;&emsp;options是service的修饰符，用来告诉init怎样及何时启动service。具体选项和含义也可以参照上面的链接。    
 &emsp;&emsp;在init.rc中定义和启动的众多服务将会在后续继续讲到。    
 
@@ -272,19 +258,17 @@ Platform： MTK6580/MTK6735/MTK6753
 ### 3. Zygote
 
 &emsp;&emsp;Zygote翻译成中文是受精卵的意思，名字比较奇怪、但是在知道了android进程创建之后就会觉得非常形象。在android中，大部分的应用程序进程都是由zygote来创建的，为什么用大部分，因为还有一些进程比如系统引导进程、init进程等不是由zygote创建的。相反，zygote还是在init进程之后才被创建的。
-那么zygote是如何起来的？答案还是在init.rc中。在init.rc文件开始的地方又include了另外几个init*.rc文件:    
-
+那么zygote是如何起来的？答案还是在init.rc中。在init.rc文件开始的地方又include了另外几个init*.rc文件:      
 ```bash
     import /init.environ.rc
     import /init.usb.rc
     import /init.${ro.hardware}.rc
     import /init.${ro.zygote}.rc
     import /init.trace.rc
-```
-&emsp;&emsp;其中就包括了zygote相关。    
+```     
+&emsp;&emsp;其中就包括了zygote相关。         
 ![zygote_files](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/zygote_files.png)
-&emsp;&emsp;在和init.rc同个目录下（system/core/rootdir）中可以看到上面这几个文件，以32位的为例。看到内容不多，就定义了一个service。    
-
+&emsp;&emsp;在和init.rc同个目录下（system/core/rootdir）中可以看到上面这几个文件，以32位的为例。看到内容不多，就定义了一个service。       
 ```bash
     service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
         class main
@@ -293,25 +277,22 @@ Platform： MTK6580/MTK6735/MTK6753
         onrestart write /sys/power/state on
         onrestart restart media
         onrestart restart netd
-```    
+```       
 &emsp;&emsp;这个service是在系统启动之初来启动一个名为app_process的进程。那么这个app_process和zygote又有何关系？在linux的用户空间，进程app_process会做一些zygote进程启动的前期工作，如，启动runtime运行时环境(实例)，参数分解，设置startSystemServer标志，接着用runtime.start()来执行zygote服务的代码，其实说简单点，就是zygote抢了app_process这个进程的躯壳，改了名字，将后面的代码换成zygote的main函数，这样顺利地过度到了zygote服务进程。这样我们在控制台用ps看系统所有进程，就不会看到app_process，取而代之的是zygote。我们来从代码中核实一下。    
-&emsp;&emsp;首先来看一下app_process，其代码在frameworks/base/cmds/app_process目录下，来看app_main.cpp的main函数。    
-
+&emsp;&emsp;首先来看一下app_process，其代码在frameworks/base/cmds/app_process目录下，来看app_main.cpp的main函数。      
 ```cpp
     if (!niceName.isEmpty()) {
         runtime.setArgv0(niceName.string());
         set_process_name(niceName.string());
     }    
-```
-&emsp;&emsp;在这里就是上文提到过的zygote抢了app_process进程的躯壳，然后改了process的名字，将在后面启动zygote的main函数，过度到zygote进程。    
-
+```    
+&emsp;&emsp;在这里就是上文提到过的zygote抢了app_process进程的躯壳，然后改了process的名字，将在后面启动zygote的main函数，过度到zygote进程。     
 ```cpp
     if (zygote) {
         runtime.start("com.android.internal.os.ZygoteInit", args, zygote);
     }
-```    
-&emsp;&emsp;通过AndroidRuntime来启动zygote进程，这里比较重要的就是创建VM虚拟机的操作了。代码进入了frameworks/base/core/jni/AndroidRuntime.cpp中的start方法，然后比较关键的代码就是：    
-
+```       
+&emsp;&emsp;通过AndroidRuntime来启动zygote进程，这里比较重要的就是创建VM虚拟机的操作了。代码进入了frameworks/base/core/jni/AndroidRuntime.cpp中的start方法，然后比较关键的代码就是：       
 ```cpp
     /* start the virtual machine */
     JniInvocation jni_invocation;
@@ -321,11 +302,10 @@ Platform： MTK6580/MTK6735/MTK6753
         return;
     }
     onVmCreated(env);
-```    
-&emsp;&emsp;Runtime启动的ZygoteInit进程代码在frameworks/base/core/java/com/android/internal/os/ZygoteInit.java。在其main函数中比较重要的几点如下：    
-1. 调用registerZygoteSocket(socketName)为zygote命令连接注册一个服务器套接字    
-2. 调用preload预加载类和资源    
-
+```       
+&emsp;&emsp;Runtime启动的ZygoteInit进程代码在frameworks/base/core/java/com/android/internal/os/ZygoteInit.java。在其main函数中比较重要的几点如下：       
+* 调用registerZygoteSocket(socketName)为zygote命令连接注册一个服务器套接字    
+* 调用preload预加载类和资源      
 ```java
     static void preload() {
         Log.d(TAG, "begin preload");
@@ -342,24 +322,21 @@ Platform： MTK6580/MTK6735/MTK6753
         WebViewFactory.prepareWebViewInZygote();
         Log.d(TAG, "end preload");
     }
-```    
-&emsp;&emsp;preloadClasses方法会预加载一个文本文件中包含的一系列类，这个文件在手机中的目录为:    
-
+```       
+&emsp;&emsp;preloadClasses方法会预加载一个文本文件中包含的一系列类，这个文件在手机中的目录为:       
 ```java
     private static final String PRELOADED_CLASSES = "/system/etc/preloaded-classes";
-```    
+```       
 &emsp;&emsp;在源码中的位置为framework/base/preloaded-classes。    
 &emsp;&emsp;preloadResources() preloadResources也意味着本地主题、布局以及android.R文件中包含的所有东西都会用这个方法加载。    
 &emsp;&emsp;后面的几个preload方法也会加载OpenGl库，共享库等等。    
-3. 然后就走到开机流程中关键的一步，启动SystemServer    
-
+* 然后就走到开机流程中关键的一步，启动SystemServer      
 ```java
     if (startSystemServer) {
         startSystemServer(abiList, socketName);
     }
-```    
-&emsp;&emsp;startSystemServer方法中调用了Zygote.forkSystemServer，然后子进程就调用handleSystemServerProcess，而父进程则直接返回true并沿着步骤4往下走。    
-
+```     
+&emsp;&emsp;startSystemServer方法中调用了Zygote.forkSystemServer，然后子进程就调用handleSystemServerProcess，而父进程则直接返回true并沿着步骤4往下走。      
 ```java
     try {
         parsedArgs = new ZygoteConnection.Arguments(args);
@@ -386,21 +363,18 @@ Platform： MTK6580/MTK6735/MTK6753
 
             handleSystemServerProcess(parsedArgs);
         }
-```    
-&emsp;&emsp;在handleSystemServerProcess方法中，通过ClassPath来装载Dex文件，然后是构造一些参数，最后通过RuntimeInit.zygoteInit来将参数传递给SystemServer，调用的是frameworks/base/core/java/com/android/internal/os/RuntimeInit.java中的zygoteInit方法。这里可以根据参数传递的走向来跟踪主要流程：    
-&emsp;&emsp;在zygoteInit方法中继续调用applicationInit方法:    
-
+```      
+&emsp;&emsp;在handleSystemServerProcess方法中，通过ClassPath来装载Dex文件，然后是构造一些参数，最后通过RuntimeInit.zygoteInit来将参数传递给SystemServer，调用的是frameworks/base/core/java/com/android/internal/os/RuntimeInit.java中的zygoteInit方法。这里可以根据参数传递的走向来跟踪主要流程：      
+&emsp;&emsp;在zygoteInit方法中继续调用applicationInit方法:      
 ```java
     applicationInit(targetSdkVersion, argv, classLoader);
-```    
-&emsp;&emsp;然后继续调用invokeStaticMain方法：    
-
+```      
+&emsp;&emsp;然后继续调用invokeStaticMain方法：     
 ```java
     // Remaining arguments are passed to the start class's static main
     invokeStaticMain(args.startClass, args.startArgs, classLoader);
-```    
-&emsp;&emsp;这里离SystemServer就不远了，最后的几步是这样实现的。先获取到SystemServer的main方法（带参数 system_server），结果就是得到包com.android.server.SystemServer的main()函数：    
-
+```       
+&emsp;&emsp;这里离SystemServer就不远了，最后的几步是这样实现的。先获取到SystemServer的main方法（带参数 system_server），结果就是得到包com.android.server.SystemServer的main()函数：       
 ```java
     Method m;
     try {
@@ -412,9 +386,8 @@ Platform： MTK6580/MTK6735/MTK6753
         throw new RuntimeException(
             "Problem getting static main on " + className, ex);
     }
-```    
-&emsp;&emsp;然后交给ZygoteInit的内部类来处理：    
-
+```       
+&emsp;&emsp;然后交给ZygoteInit的内部类来处理：       
 ```java
     /*
      * This throw gets caught in ZygoteInit.main(), which responds
@@ -423,9 +396,8 @@ Platform： MTK6580/MTK6735/MTK6753
      * up the process.
      */
     throw new ZygoteInit.MethodAndArgsCaller(m, argv);
-```    
-&emsp;&emsp;MethodAndArgsCaller类实现了Runnable，看它的run方法做的事情：    
-
+```      
+&emsp;&emsp;MethodAndArgsCaller类实现了Runnable，看它的run方法做的事情：       
 ```java
     public void run() {
         try {
@@ -442,9 +414,8 @@ Platform： MTK6580/MTK6735/MTK6753
             throw new RuntimeException(ex);
         }
     }
-```    
-&emsp;&emsp;通过Method的invoke来运行包com.android.server.SystemServer的main()函数。这样就启动了SystemServer，代码位于frameworks/base/services/java/com/android/server/SystemServer.java。    
-
+```       
+&emsp;&emsp;通过Method的invoke来运行包com.android.server.SystemServer的main()函数。这样就启动了SystemServer，代码位于frameworks/base/services/java/com/android/server/SystemServer.java。      
 ```java
     /**
      * The main entry point from zygote.
@@ -452,9 +423,8 @@ Platform： MTK6580/MTK6735/MTK6753
     public static void main(String[] args) {
         new SystemServer().run();
     }
-```    
-4. runSelectLoop()：这是zygote最后做的事情。进入一个死循环，不再返回，开始孵化整个Android的工作。代码如下：    
-
+```       
+* runSelectLoop()：这是zygote最后做的事情。进入一个死循环，不再返回，开始孵化整个Android的工作。代码如下：       
 ```java
     while (true) {
         StructPollfd[] pollFds = new StructPollfd[fds.size()];
@@ -485,8 +455,8 @@ Platform： MTK6580/MTK6735/MTK6753
             }
         }
     }
-```    
-&emsp;&emsp;其工作原理如下图所示：    
+```      
+&emsp;&emsp;其工作原理如下图所示：      
 ![zygote_service_flow](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/zygote_service_flow.png)
 &emsp;&emsp;此原理更详细的可以参考[ zygote工作流程分析 ](http://www.cnblogs.com/bastard/archive/2012/09/03/2668579.html)。
 
@@ -494,25 +464,21 @@ Platform： MTK6580/MTK6735/MTK6753
 
 &emsp;&emsp;上面已经讲到了从zygote是如何启动SystemServer的，可以callstack中的函数调用栈再来回顾一下：    
 ![zygote_callstack](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/zygote_callstack.png)
-&emsp;&emsp;这一节就来关注下SystemServer在启动过程中所做的事情。代码位于frameworks/base/services/java/com/android/server/SystemServer.java。流程从run方法开始，下面来看下几个关键步骤：    
-
-1. 准备消息队列    
-
+&emsp;&emsp;这一节就来关注下SystemServer在启动过程中所做的事情。代码位于frameworks/base/services/java/com/android/server/SystemServer.java。流程从run方法开始，下面来看下几个关键步骤：      
+* 准备消息队列       
 ```java
     // Prepare the main looper thread (this thread).
     android.os.Process.setThreadPriority(
             android.os.Process.THREAD_PRIORITY_FOREGROUND);
     android.os.Process.setCanSelfBackground(false);
     Looper.prepareMainLooper();
-```    
-2. 加载库：android_servers库是frameworks/base/services/core/jni目录下编译出来的共享库。    
-
+```       
+* 加载库：android_servers库是frameworks/base/services/core/jni目录下编译出来的共享库。        
 ```java
     // Initialize native services.
     System.loadLibrary("android_servers");
-```    
-3. 检查上次关机是否失败，如果是，则在这一步直接进行关机，就没有然后了。如果正常则继续往下走，创建系统context。    
-
+```      
+* 检查上次关机是否失败，如果是，则在这一步直接进行关机，就没有然后了。如果正常则继续往下走，创建系统context。      
 ```java
     // Check whether we failed to shut down last time we tried.
     // This call may not return.
@@ -520,9 +486,9 @@ Platform： MTK6580/MTK6735/MTK6753
 
     // Initialize the system context.
     createSystemContext();
-```    
-4. 开始启动各种服务：首先是创建SystemServiceManager用来管理服务的生命周期，然后开始启动三类服务，包括了Boot Strap（启动流程相关服务）、Core（核心服务）和Other（其他服务），详见第5章系统服务。    
-5. 调用Looper.loop()方法让SystemServer的Looper开始工作，从消息队列里取消息，处理消息。    
+```       
+* 开始启动各种服务：首先是创建SystemServiceManager用来管理服务的生命周期，然后开始启动三类服务，包括了Boot Strap（启动流程相关服务）、Core（核心服务）和Other（其他服务），详见第5章系统服务。       
+* 调用Looper.loop()方法让SystemServer的Looper开始工作，从消息队列里取消息，处理消息。       
 
 ### 5. 系统服务
 
@@ -547,49 +513,43 @@ Platform： MTK6580/MTK6735/MTK6753
         }
         /// @}
     }
-```    
-&emsp;&emsp;**先来看一下startBootstrapServices都启动了哪些服务：**    
-&emsp;&emsp;Installer服务：在它起来之后才有合适的权限创建一些重要目录例如data/user，需要在其他服务初始化之前完成这一步。    
-
+```      
+&emsp;&emsp;**先来看一下startBootstrapServices都启动了哪些服务：**     
+&emsp;&emsp;Installer服务：在它起来之后才有合适的权限创建一些重要目录例如data/user，需要在其他服务初始化之前完成这一步。      
 ```java
     // Wait for installd to finish starting up so that it has a chance to
     // create critical directories such as /data/user with the appropriate
     // permissions.  We need this to complete before we initialize other services.
     Installer installer = mSystemServiceManager.startService(Installer.class);
-```    
-&emsp;&emsp;启动ActivityManagerService：用来管理应用进程的生命周期以及进程的Activity，Service，Broadcast和Provider等。    
-
+```       
+&emsp;&emsp;启动ActivityManagerService：用来管理应用进程的生命周期以及进程的Activity，Service，Broadcast和Provider等。      
 ```java
     // Activity manager runs the show.
     mActivityManagerService = mSystemServiceManager.startService(
             ActivityManagerService.Lifecycle.class).getService();
     mActivityManagerService.setSystemServiceManager(mSystemServiceManager);
     mActivityManagerService.setInstaller(installer);
-```    
-&emsp;&emsp;启动PowerManagerService：PMS也必须很早就启动，因为其他服务也都用来它。    
-
+```      
+&emsp;&emsp;启动PowerManagerService：PMS也必须很早就启动，因为其他服务也都用来它。      
 ```java
     // Power manager needs to be started early because other services need it.
     // Native daemons may be watching for it to be registered so it must be ready
     // to handle incoming binder calls immediately (including being able to verify
     // the permissions for those calls).
     mPowerManagerService = mSystemServiceManager.startService(PowerManagerService.class);
-```    
-&emsp;&emsp;启动LightService：管理LED等和屏幕背光。    
-
+```      
+&emsp;&emsp;启动LightService：管理LED等和屏幕背光。     
 ```java
     // Manages LEDs and display backlight so we need it to bring up the display.
     mSystemServiceManager.startService(LightsService.class);
-```    
-&emsp;&emsp;启动DisplayManagerService：显示管理服务，支持多种显示类型的多个显示器的镜像显示，包括内建的显示类型（本地）、HDMI显示类型以及支持WIFI Display 协议( MIRACAST)，实现本地设备在远程显示器上的镜像显示。    
-
+```       
+&emsp;&emsp;启动DisplayManagerService：显示管理服务，支持多种显示类型的多个显示器的镜像显示，包括内建的显示类型（本地）、HDMI显示类型以及支持WIFI Display 协议( MIRACAST)，实现本地设备在远程显示器上的镜像显示。      
 ```java
     // Display manager is needed to provide display metrics before package manager
     // starts up.
     mDisplayManagerService = mSystemServiceManager.startService(DisplayManagerService.class);
-```    
-&emsp;&emsp;启动PackageManagerService：负责管理系统的Package，包括APK的安装，卸载，信息的查询等等。    
-
+```     
+&emsp;&emsp;启动PackageManagerService：负责管理系统的Package，包括APK的安装，卸载，信息的查询等等。       
 ```java
     // Start the package manager.
     Slog.i(TAG, "Package Manager");
@@ -597,25 +557,22 @@ Platform： MTK6580/MTK6735/MTK6753
             mFactoryTestMode != FactoryTest.FACTORY_TEST_OFF, mOnlyCore);
     mFirstBoot = mPackageManagerService.isFirstBoot();
     mPackageManager = mSystemContext.getPackageManager();
-```    
-&emsp;&emsp;往ServiceManager中注册UserManagerService：提供了创建/删除/擦除用户、用户信息获取、用户句柄获取等用户操作的方法。    
-
+```      
+&emsp;&emsp;往ServiceManager中注册UserManagerService：提供了创建/删除/擦除用户、用户信息获取、用户句柄获取等用户操作的方法。      
 ```java
     Slog.i(TAG, "User Service");
     ServiceManager.addService(Context.USER_SERVICE, UserManagerService.getInstance());
-```    
-&emsp;&emsp;在后续启动SensorService。    
-
+```       
+&emsp;&emsp;在后续启动SensorService。       
 ```java
     // The sensor service needs access to package manager service, app ops
     // service, and permissions service, therefore we start it after them.
     startSensorService();
-```            
-**再来看下启动的核心服务都有哪些：**    
+```               
+**再来看下启动的核心服务都有哪些：**       
 1. 启动BatteryService来跟踪电量以及发送电池广播，需要LightService先启动    
 2. 启动UsageStatsService来提供收集统计应用程序数据使用状态的服务    
-3. 启动WebViewUpdateService来跟踪可用的更新    
-
+3. 启动WebViewUpdateService来跟踪可用的更新       
 ```java
     /**
      * Starts some essential services that are not tangled up in the bootstrap process.
@@ -634,13 +591,13 @@ Platform： MTK6580/MTK6735/MTK6753
         // Tracks whether the updatable WebView is in a ready state and watches for update installs.
         mSystemServiceManager.startService(WebViewUpdateService.class);
     }
-```    
-**然后调用startOtherServices()启动一些杂项的服务：**    
-1. 注册调度策略服务SchedulingPolicyService    
+```       
+**然后调用startOtherServices()启动一些杂项的服务：**      
+1. 注册调度策略服务SchedulingPolicyService      
 ```java
     Slog.i(TAG, "Scheduling Policy");
     ServiceManager.addService("scheduling_policy", new SchedulingPolicyService());
-```    
+```       
 2. 注册TelecomLoaderService    
 ```java
     mSystemServiceManager.startService(TelecomLoaderService.class);
@@ -973,17 +930,15 @@ Platform： MTK6580/MTK6735/MTK6753
 ### 6. 开机动画
 
 &emsp;&emsp;开机动画是在SurfaceFlinger中来完成的，所以先来看一下SurfaceFlinger是如何启动的。
-在init.rc中定义了SurfaceFlinger服务:    
-
+在init.rc中定义了SurfaceFlinger服务:      
 ```bash
     service surfaceflinger /system/bin/surfaceflinger
         class core
         user system
         group graphics drmrpc
         onrestart restart zygote
-```    
-&emsp;&emsp;所以在init也开始了SurfaceFlinger服务的启动，/system/bin/srufaceflinger可执行文件是由frameworks/native/services/surfaceflinger目录编译生成的。执行时会先走到该目录下main_surfaceflinger.cpp的main方法    。
-
+```      
+&emsp;&emsp;所以在init也开始了SurfaceFlinger服务的启动，/system/bin/srufaceflinger可执行文件是由frameworks/native/services/surfaceflinger目录编译生成的。执行时会先走到该目录下main_surfaceflinger.cpp的main方法。     
 ```cpp
     int main(int, char**) {
         // When SF is launched in its own process, limit the number of
@@ -1013,16 +968,14 @@ Platform： MTK6580/MTK6735/MTK6753
     
         return 0;
     }
-```    
-&emsp;&emsp;在main方法中主要先new了一个SurfaceFlinger的对象，然后调用该对象的init方法，再调用run方法。     
-&emsp;&emsp;再来看SurfaceFlinger.cpp的init方法来初始化：在这个方法中就是去初始化GL和图形绘制的动作，在这个方法的最后可以看到调用了startBootAnim方法来尝试播放开机动画。    
-
+```       
+&emsp;&emsp;在main方法中主要先new了一个SurfaceFlinger的对象，然后调用该对象的init方法，再调用run方法。       
+&emsp;&emsp;再来看SurfaceFlinger.cpp的init方法来初始化：在这个方法中就是去初始化GL和图形绘制的动作，在这个方法的最后可以看到调用了startBootAnim方法来尝试播放开机动画。      
 ```cpp
     // start boot animation
     startBootAnim();
 ```    
-&emsp;&emsp;在这个方法里就是通过属性服务来控制开机动画的播放的。    
-
+&emsp;&emsp;在这个方法里就是通过属性服务来控制开机动画的播放的。      
 ```cpp
     void SurfaceFlinger::startBootAnim() {
     #ifdef MTK_AOSP_ENHANCEMENT
@@ -1034,7 +987,7 @@ Platform： MTK6580/MTK6735/MTK6753
         property_set("ctl.start", "bootanim");
     #endif
     }
-```    
+```      
 &emsp;&emsp;把service.bootanim.exit属性设为0，这个属性bootanimation进程里会周期检查，=1时就退出动画，这里=0表示要播放动画。后面通过ctl.start的命令启动bootanimation进程，动画就开始播放了。    
 &emsp;&emsp;那么接下来的工作就是在bootanimation进程里实现开机动画的播放，这个进程在手机中的目录为system/bin/bootanimation，代码中的目录为frameworks/base/cmds/bootanimation。详细实现的方法这里不再介绍，具体可以参照[ android开机动画启动流程  ](http://blog.csdn.net/happy_6678/article/details/46236831)。    
 
