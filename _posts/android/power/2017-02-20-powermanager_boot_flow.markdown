@@ -87,7 +87,9 @@ Platform： MTK6580/MTK6735/MTK6753
 2. fork出zygote    
 3. 提供属性服务来管理系统属性    
 &emsp;&emsp;下面我们从代码角度来具体看看init线程都做了哪些事情。Init的代码位于system/core/init目录下，先来看init.cpp文件。在这个文件的main方法中可以初探端倪，以下代码为MTK AOSP Android6.0。    
+
 * 1.将kernel启动过程中建立好的文件系统框架mount到相应目录   
+
 ```cpp
     mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755");
     mkdir("/dev/pts", 0755);
@@ -99,7 +101,7 @@ Platform： MTK6580/MTK6735/MTK6753
 * 2.调用util.cpp的open_devnull_stdio方法，用来将init进程的标准输入、输出、出错设备设置为新建的设备节点/dev/__null__。    
 * 3.调用klog_init()和klog_set_level(KLOG_NOTICE_LEVEL)方法创建并打开设备节点/dev/__kmsg__来作为kernel log的输出节点。    
 * 4.调用selinux_initialize方法来建立SELinux，如果处于内核空间则同时加载SELinux策略。    
-* 5.调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。
+* 5.调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。    
 
 ```cpp
     // Write to signal_write_fd if we catch SIGCHLD.
