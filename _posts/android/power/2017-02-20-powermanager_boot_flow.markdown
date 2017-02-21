@@ -99,7 +99,8 @@ Platform： MTK6580/MTK6735/MTK6753
 * 2.调用util.cpp的open_devnull_stdio方法，用来将init进程的标准输入、输出、出错设备设置为新建的设备节点/dev/__null__。    
 * 3.调用klog_init()和klog_set_level(KLOG_NOTICE_LEVEL)方法创建并打开设备节点/dev/__kmsg__来作为kernel log的输出节点。    
 * 4.调用selinux_initialize方法来建立SELinux，如果处于内核空间则同时加载SELinux策略。    
-* 5.调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。        
+* 5.调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。
+
 ```cpp
     // Write to signal_write_fd if we catch SIGCHLD.
     struct sigaction act;
@@ -171,7 +172,7 @@ Platform： MTK6580/MTK6735/MTK6753
         }
     }
 ```     
-到这里就是init线程启动众多服务的过程了，服务的定义还需要参考init.rc	能够更好的理解。    
+&emsp;&emsp;到这里就是init线程启动众多服务的过程了，服务的定义还需要参考init.rc	能够更好的理解。    
 * 9.到这里init就进入了死循环中一直在监听ufds中的4个文件描述符的动静，如果有POLLIN的事件，就做相应的处理，所以init并没有退出或者进入idle，而是被当做一个服务在运行。       
 ```cpp
     while (true) {
@@ -574,7 +575,8 @@ Platform： MTK6580/MTK6735/MTK6753
 **再来看下启动的核心服务都有哪些：**       
 * 1.启动BatteryService来跟踪电量以及发送电池广播，需要LightService先启动    
 * 2.启动UsageStatsService来提供收集统计应用程序数据使用状态的服务    
-* 3.启动WebViewUpdateService来跟踪可用的更新    
+* 3.启动WebViewUpdateService来跟踪可用的更新
+
 ```java
     /**
      * Starts some essential services that are not tangled up in the bootstrap process.
