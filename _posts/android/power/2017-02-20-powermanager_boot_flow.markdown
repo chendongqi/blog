@@ -23,9 +23,11 @@ Platform： MTK6580/MTK6735/MTK6753
 &emsp;&emsp;一个完整的开机流程，从用户的角度上看是这样的：
 ![boot_flow_user](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/boot_flow_user.png)
 &emsp;&emsp;长按power键感受到手机带给你的震动之后,奇妙之旅就此开始了。正常三秒之内呈现第一屏,一般呈现的是制造厂商的 logo;八秒左右进入第二屏,一般定制为品牌商 logo(从 ODM的角度看就是客户);然后播放开机动画和开机铃声;之后就进入了锁屏界面,开机过程引导完成。
+
 &emsp;&emsp;而从一个工程师的角度需要看到现象背后的实质,那么其实它是这样的:
 ![boot_flow_engineer](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/boot_flow_engineer.png)
 &emsp;&emsp;（1）在第一屏显示之前和显示过程中，背后是uboot在引导os启动然后加载kernel的过程；（2）当kernel加载完成进入init进程之后，显示第二屏，这个现象的背后则是Android系统的第一个进程init启动，fork出zygote，然后由zygote去启动SystemServer；（3）当显示开机动画时，SystemServer在启动系统运行所需的众多核心服务和普通服务，以及初始化和加载一些应用；（4）播放完开机动画进入到锁屏或者launcher之后系统开机过程就基本结束了。
+
 &emsp;&emsp;以上是一个从开机现象看到的结果，简单的提到了开机现象背后的几个流程，以下我们将系统的来讨论整个开机流程。
 
 ### 1. 写在Android Boot之前
@@ -35,10 +37,10 @@ Platform： MTK6580/MTK6735/MTK6753
 #### 1.1 Bootloader
 
 &emsp;&emsp;首先来弄明白Bootloader到底是什么东西？抽象的说，Bootloader是在操作系统运行之前运行的一段程序，它可以将系统的软硬件环境带到一个合适状态，为运行操作系统做好准备。它的终极任务就是把OS带起来。
+
 &emsp;&emsp;在嵌入式系统的世界里，存在各种各样的Bootloader，划分方式有根据处理器的体系结构，也有功能的复杂程度。对于不同的体系结构都有一些可选的Bootloader源码可以选择：
 
-1) X86：X86的工作站和服务器上一般使用LILO和GRUB。
-
+1) X86：X86的工作站和服务器上一般使用LILO和GRUB。    
 2) ARM：最早有为ARM720处理器开发板所做的固件，又有了armboot，StrongARM平台的blob，还有S3C2410处理器开发板上的vivi等。现在armboot已经并入了U-Boot，所以U-Boot也支持ARM/XSCALE平台。U-Boot已经成为ARM平台事实上的标准Bootloader。
 
 3) PowerPC：最早使用于ppcboot，不过现在大多数直接使用U-boot。
