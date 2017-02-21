@@ -40,7 +40,8 @@ Platform： MTK6580/MTK6735/MTK6753
 2. ARM：最早有为ARM720处理器开发板所做的固件，又有了armboot，StrongARM平台的blob，还有S3C2410处理器开发板上的vivi等。现在armboot已经并入了U-Boot，所以U-Boot也支持ARM/XSCALE平台。U-Boot已经成为ARM平台事实上的标准Bootloader。    
 3. PowerPC：最早使用于ppcboot，不过现在大多数直接使用U-boot。    
 4. MIPS：最早都是MIPS开发商自己写的bootloader，不过现在U-boot也支持MIPS架构。    
-5. M68K：Redboot能够支持m68k系列的系统。    
+5. M68K：Redboot能够支持m68k系列的系统。
+
 &emsp;&emsp;在这里我们讨论下ARM架构的Bootloader。
 
 #### 1.2 Arm特定平台的Bootloader
@@ -65,7 +66,8 @@ Platform： MTK6580/MTK6735/MTK6753
 4. 把BootRom程序复制到外部存储中    
 5. 重新定位存储位置，把0x00000000地址对应到外部存储中    
 6. 把第二阶段的Bootloader载入到外部存储或者CPU内部存储中。    
-7. 执行第二阶段的Bootloader    
+7. 执行第二阶段的Bootloader
+
 &emsp;&emsp;在MTK的Bootloader方案中，加入了preloader，它是MTK 内部的一个loader，其主要作用在于：1）保护芯片避免被黑；2）准备代码执行的安全环境；3）包含了许多安全功能和一些安全检查的步骤；4）加载和启动U-Boot
 ![mtk_bootloader](https://chendongqi.github.io/blog/img/2017-02-20-powermanager-boot_flow/mtk_bootloader.png)
 
@@ -85,7 +87,7 @@ Platform： MTK6580/MTK6735/MTK6753
 2. fork出zygote    
 3. 提供属性服务来管理系统属性    
 &emsp;&emsp;下面我们从代码角度来具体看看init线程都做了哪些事情。Init的代码位于system/core/init目录下，先来看init.cpp文件。在这个文件的main方法中可以初探端倪，以下代码为MTK AOSP Android6.0。    
-1. 将kernel启动过程中建立好的文件系统框架mount到相应目录   
+* 1.将kernel启动过程中建立好的文件系统框架mount到相应目录   
 ```cpp
     mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755");
     mkdir("/dev/pts", 0755);
@@ -94,10 +96,10 @@ Platform： MTK6580/MTK6735/MTK6753
     mount("proc", "/proc", "proc", 0, NULL);
     mount("sysfs", "/sys", "sysfs", 0, NULL);
 ```
-2. 调用util.cpp的open_devnull_stdio方法，用来将init进程的标准输入、输出、出错设备设置为新建的设备节点/dev/__null__。    
-3. 调用klog_init()和klog_set_level(KLOG_NOTICE_LEVEL)方法创建并打开设备节点/dev/__kmsg__来作为kernel log的输出节点。    
-4. 调用selinux_initialize方法来建立SELinux，如果处于内核空间则同时加载SELinux策略。    
-5. 调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。        
+* 2.调用util.cpp的open_devnull_stdio方法，用来将init进程的标准输入、输出、出错设备设置为新建的设备节点/dev/__null__。    
+* 3.调用klog_init()和klog_set_level(KLOG_NOTICE_LEVEL)方法创建并打开设备节点/dev/__kmsg__来作为kernel log的输出节点。    
+* 4.调用selinux_initialize方法来建立SELinux，如果处于内核空间则同时加载SELinux策略。    
+* 5.调用signal_handler.cpp的signal_handler_init方法重新设置子进程终止时信号SIGCHLD的处理函数。        
 ```cpp
     // Write to signal_write_fd if we catch SIGCHLD.
     struct sigaction act;
@@ -110,8 +112,8 @@ Platform： MTK6580/MTK6735/MTK6753
 
     register_epoll_handler(signal_read_fd, handle_signal);
 ```    
-6. 调用property_service.cpp的property_load_boot_defaults方法从文件中加载默认启动属性    
-7. 调用start_property_service方法，创建Property服务建立socket通信，并开始监听属性服务请求     
+* 6.调用property_service.cpp的property_load_boot_defaults方法从文件中加载默认启动属性    
+* 7.调用start_property_service方法，创建Property服务建立socket通信，并开始监听属性服务请求     
 ```cpp
     void start_property_service() {
         property_set_fd = create_socket(PROP_SERVICE_NAME, SOCK_STREAM | SOCK_CLOEXEC |             SOCK_NONBLOCK, 0666, 0, 0, NULL);
@@ -125,7 +127,7 @@ Platform： MTK6580/MTK6735/MTK6753
     }
 ```    
 &emsp;&emsp;到这里也就是init线程提供的属性服务了。    
-8. 然后就是启动init.rc中定义的服务，这里分为几个步骤。首先是解析init.rc文件：      
+* 8.然后就是启动init.rc中定义的服务，这里分为几个步骤。首先是解析init.rc文件：      
 ```cpp
     init_parse_config_file("/init.rc");
 ```    
@@ -169,8 +171,8 @@ Platform： MTK6580/MTK6735/MTK6753
         }
     }
 ```     
-&emsp;&emsp;到这里就是init线程启动众多服务的过程了，服务的定义还需要参考init.rc	能够更好的理解。    
-9. 到这里init就进入了死循环中一直在监听ufds中的4个文件描述符的动静，如果有POLLIN的事件，就做相应的处理，所以init并没有退出或者进入idle，而是被当做一个服务在运行。       
+到这里就是init线程启动众多服务的过程了，服务的定义还需要参考init.rc	能够更好的理解。    
+* 9.到这里init就进入了死循环中一直在监听ufds中的4个文件描述符的动静，如果有POLLIN的事件，就做相应的处理，所以init并没有退出或者进入idle，而是被当做一个服务在运行。       
 ```cpp
     while (true) {
         if (!waiting_for_exec) {
@@ -570,9 +572,9 @@ Platform： MTK6580/MTK6735/MTK6753
     startSensorService();
 ```               
 **再来看下启动的核心服务都有哪些：**       
-1. 启动BatteryService来跟踪电量以及发送电池广播，需要LightService先启动    
-2. 启动UsageStatsService来提供收集统计应用程序数据使用状态的服务    
-3. 启动WebViewUpdateService来跟踪可用的更新       
+* 1.启动BatteryService来跟踪电量以及发送电池广播，需要LightService先启动    
+* 2.启动UsageStatsService来提供收集统计应用程序数据使用状态的服务    
+* 3.启动WebViewUpdateService来跟踪可用的更新    
 ```java
     /**
      * Starts some essential services that are not tangled up in the bootstrap process.
@@ -591,7 +593,8 @@ Platform： MTK6580/MTK6735/MTK6753
         // Tracks whether the updatable WebView is in a ready state and watches for update installs.
         mSystemServiceManager.startService(WebViewUpdateService.class);
     }
-```       
+```
+
 **然后调用startOtherServices()启动一些杂项的服务：**      
 1. 注册调度策略服务SchedulingPolicyService      
 ```java
