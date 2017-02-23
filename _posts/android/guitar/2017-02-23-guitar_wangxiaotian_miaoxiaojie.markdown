@@ -13,6 +13,6 @@ tags:
     - 王晓天
 ---
 
-![再见吧喵小姐_1](https://chendongqi.github.io/blog/img2017-02-23-guitar_wangxiaotian_miaoxiaojie/再见吧喵小姐_1.png)    
-![再见吧喵小姐_2](https://chendongqi.github.io/blog/img2017-02-23-guitar_wangxiaotian_miaoxiaojie/再见吧喵小姐_2.png)    
-![再见吧喵小姐_3](https://chendongqi.github.io/blog/img2017-02-23-guitar_wangxiaotian_miaoxiaojie/再见吧喵小姐_3.png)    
+![再见吧喵小姐_1](https://chendongqi.github.io/blog/img/2017-02-23-guitar_wangxiaotian_miaoxiaojie/再见吧喵小姐_1.png)    
+![再见吧喵小姐_2](https://chendongqi.github.io/blog/img/2017-02-23-guitar_wangxiaotian_miaoxiaojie/再见吧喵小姐_2.png)    
+![再见吧喵小姐_3](https://chendongqi.github.io/blog/img/2017-02-23-guitar_wangxiaotian_miaoxiaojie/再见吧喵小姐_3.png)    
