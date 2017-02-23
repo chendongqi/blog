@@ -96,7 +96,7 @@ return (mWakeLockSummary & WAKE_LOCK_PROXIMITY_SCREEN_OFF) != 0;
 
 #### 2.2 state
 
-&emsp;&emsp;state是指display的状态，一共在Display.java中定义了五个状态:
+&emsp;&emsp;state是指display的状态，一共在Display.java中定义了五个状态:    
 &emsp;&emsp;&emsp;&emsp;STATE_UNKNOWN = 0	//未知    
 &emsp;&emsp;&emsp;&emsp;STATE_OFF = 1	//屏幕灭     
 &emsp;&emsp;&emsp;&emsp;STATE_ON = 2	//屏幕亮    
