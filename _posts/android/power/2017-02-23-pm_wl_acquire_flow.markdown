@@ -269,7 +269,7 @@ Platform： MTK6580/MTK6735/MTK6753
         return (mWakeLockSummary & WAKE_LOCK_PROXIMITY_SCREEN_OFF) != 0;
     }
 ```    
-&emsp;&emsp;在通话时会申请WAKE_LOCK_PROXIMITY_SCREEN_OFF电源锁，具体可以参照文档《通话过程中pSensor工作原理分析》，在PMS的shouldUseProximitySensorLocked方法中就是判断mWakeLockSummary变量中是否有WAKE_LOCK_PROXIMITY_SCREEN_OFF来决定pSensor是否处于可用状态。    
+&emsp;&emsp;在通话时会申请WAKE_LOCK_PROXIMITY_SCREEN_OFF电源锁，具体可以参照我博客中的另一篇文章[ Android电源管理之通话中的pSensor工作原理分析 ](https://chendongqi.github.io/blog/2017/02/23/pm_pSensor_in_call/)，在PMS的shouldUseProximitySensorLocked方法中就是判断mWakeLockSummary变量中是否有WAKE_LOCK_PROXIMITY_SCREEN_OFF来决定pSensor是否处于可用状态。    
 2. 决定按键背光    
 ```java
     if ( ( (mWakeLockSummary & WAKE_LOCK_BUTTON_BRIGHT) != 0 ) ||
