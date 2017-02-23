@@ -576,9 +576,9 @@ Platform： MTK6580/MTK6735/MTK6753
 
 ### 7. 后续学习方向
 
-&emsp;&emsp;**获取wakelock的kernel部分代码深入学习**
-&emsp;&emsp;**释放wakelock代码逻辑学习**
-&emsp;&emsp;**Wakelock是如何和系统suspend产生关联的**
+&emsp;&emsp;**获取wakelock的kernel部分代码深入学习**    
+&emsp;&emsp;**释放wakelock代码逻辑学习**    
+&emsp;&emsp;**Wakelock是如何和系统suspend产生关联的**    
 
 
 
