@@ -6,7 +6,7 @@ navcolor:   "invert"
 date:       2017-02-23
 author:     "Cheson"
 #header-img: "/img/website/home-bg.jpg"
-catalog: true
+catalog: false
 tags:
     - Guitar
     - 民谣
@@ -15,5 +15,5 @@ tags:
 
 ![和你在一起1](https://chendongqi.github.io/blog/img/2017-02-23-guitar_lizhi_henizaiyiqi/和你在一起1.png)    
 ![和你在一起2](https://chendongqi.github.io/blog/img/2017-02-23-guitar_lizhi_henizaiyiqi/和你在一起2.png)    
-![和你在一起2](https://chendongqi.github.io/blog/img/2017-02-23-guitar_lizhi_henizaiyiqi/和你在一起2.png)    
-![和你在一起2](https://chendongqi.github.io/blog/img/2017-02-23-guitar_lizhi_henizaiyiqi/和你在一起2.png)
+![和你在一起3](https://chendongqi.github.io/blog/img/2017-02-23-guitar_lizhi_henizaiyiqi/和你在一起3.png)    
+![和你在一起4](https://chendongqi.github.io/blog/img/2017-02-23-guitar_lizhi_henizaiyiqi/和你在一起4.png)
