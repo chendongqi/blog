@@ -33,6 +33,6 @@ tags:
 ![doze_mode_state.png](https://chendongqi.github.io/blog/img/2017-02-28-pm_doze/doze_mode_state.png)    
 
 &emsp;&emsp;**参考资料：**    
-&emsp;&emsp;eCourse：https://onlinesso.mediatek.com/Pages/eCourse.aspx?001=002&002=002002&003=002002001&itemId=560&csId=%257B433b9ec7-cc31-43c3-938c-6dfd42cf3b57%257D%2540%257Bad907af8-9a88-484a-b020-ea10437dadf8%257D     
-&emsp;&emsp;eService：http://eservice.mediatek.com/eservice-portal/issue_manager/update/2062164
+&emsp;&emsp;eCourse：[M Doze&AppStandby](https://onlinesso.mediatek.com/Pages/eCourse.aspx?001=002&002=002002&003=002002001&itemId=560&csId=%257B433b9ec7-cc31-43c3-938c-6dfd42cf3b57%257D%2540%257Bad907af8-9a88-484a-b020-ea10437dadf8%257D)     
+&emsp;&emsp;eService：[关于doze模式是否支持的疑问](http://eservice.mediatek.com/eservice-portal/issue_manager/update/2062164)
 
