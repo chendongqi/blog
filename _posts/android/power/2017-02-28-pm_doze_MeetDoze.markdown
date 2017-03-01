@@ -16,7 +16,8 @@ tags:
 ### 1. 初识Doze
 
 &emsp;&emsp;在Android 6.0版本中google提供了两个策略：doze和app standby，能有效的减少电量的消耗，提升待机时间。设备没有连接到电源，设备进入Doze模式时，系统将通过延迟最近用户没有使用的应用程序的后台CPU运作及网络活动，让应用程序处于App Standby状态，以此来减少电池消耗。    
-&emsp;&emsp;Doze功能借助动作检测来确定用户有多长时间没用手机，然后就进入“打盹”模式，从而延长续航时间。而一旦用户重新开始使用手机，Doze模式就会取消恢复到正常状态。谷歌称，配备Doze的Nexus9将比普通Nexus续航能力提高一倍。德国科技博客ComputerBase分别用一部安装了Android M开发者预览版和一部安装了Android 5.1.1的Nexus 5来做对比。两部手机都安装了同样的应用，电池充满。同时连入相同的无线网络，使用相同的设置，都不装SIM卡，蓝牙，NFC，Android Beam以及LED等全都处于关闭状态。 结果对比是在待机8小时后，安装了Android 5.1.1的Nexus 5消耗了4%的电量，而Android M版则仅消耗了1.5%;在24小时后，Android 5.1.1版的Nexus 5消耗了12%的电量，Android M版则仅消耗了4.5%；48小时后，Android 5.1.1版的Nexus 5消耗了24%的电量，而Android M版则仅消耗了9%。总的来看，在Doze开启下，Nexus 5在Android M下则能待机533小时，在Android 5.1.1下可待机200小时。    
+&emsp;&emsp;Doze功能借助动作检测来确定用户有多长时间没用手机，然后就进入“打盹”模式，从而延长续航时间。而一旦用户重新开始使用手机，Doze模式就会取消恢复到正常状态。    
+> 谷歌称，配备Doze的Nexus9将比普通Nexus续航能力提高一倍。德国科技博客ComputerBase分别用一部安装了Android M开发者预览版和一部安装了Android 5.1.1的Nexus 5来做对比。两部手机都安装了同样的应用，电池充满。同时连入相同的无线网络，使用相同的设置，都不装SIM卡，蓝牙，NFC，Android Beam以及LED等全都处于关闭状态。 结果对比是在待机8小时后，安装了Android 5.1.1的Nexus 5消耗了4%的电量，而Android M版则仅消耗了1.5%;在24小时后，Android 5.1.1版的Nexus 5消耗了12%的电量，Android M版则仅消耗了4.5%；48小时后，Android 5.1.1版的Nexus 5消耗了24%的电量，而Android M版则仅消耗了9%。总的来看，在Doze开启下，Nexus 5在Android M下则能待机533小时，在Android 5.1.1下可待机200小时。    
 
 ### 2. 理解Doze
 
@@ -68,6 +69,7 @@ tags:
 + 6.观察你的app表现行为是否有需优化改进的地方。    
 
 &emsp;&emsp;**测试App Standby模式**    
+
 &emsp;&emsp;步骤1-3同测试Doze模式    
 + 4.运行以下adb命令迫使系统进入App Standby模式：    
 ```bash
