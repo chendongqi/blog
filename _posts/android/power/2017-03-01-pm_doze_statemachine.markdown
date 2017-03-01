@@ -32,8 +32,7 @@ tags:
 &emsp;&emsp;Doze模式具体包含了7种状态：1）当设备亮屏或者处于正常使用状态时其就为ACTIVE状态；2）ACTIVE状态下不插充电器或者usb且灭屏设备就会切换到INACTIVE状态；3）INACTIVE状态经过30分钟，期间检测没有打断状态的行为Doze就切换到IDLE_PENDING的状态；4）然后再经过30分钟以及一系列的判断，状态切换到SENSING；5）在SENSING状态下会去检测是否有地理位置变化，没有的话就切到LOCATION状态；6）LOCATION状态下再经过30s的检测时间之后就进入了Doze的核心状态IDLE；7）在IDLE模式下每隔一段时间就会进入一次IDLE_MAINTANCE，此间用来处理之前被挂起的一些任务；8）IDLE_MAINTANCE状态持续5分钟之后会重新回到IDLE状态；9）在除ACTIVE以外的所有状态中，检测到打断的行为如亮屏、插入充电器，位置的改变等状态就会回到ACTIVE，重新开始下一个轮回。    
 ![doze_mode_state.png](https://chendongqi.github.io/blog/img/2017-02-28-pm_doze/doze_mode_state.png)    
 
-&emsp;&emsp;**参考资料：**
-&emsp;&emsp;eCourse：https://onlinesso.mediatek.com/Pages/eCourse.aspx?001=002&002=002002&003=002002001&itemId=560&csId=%257B433b9ec7-cc31-43c3-938c-6dfd42cf3b57%257D%2540%257Bad907af8-9a88-484a-b020-ea10437dadf8%257D    
-
+&emsp;&emsp;**参考资料：**    
+&emsp;&emsp;eCourse：https://onlinesso.mediatek.com/Pages/eCourse.aspx?001=002&002=002002&003=002002001&itemId=560&csId=%257B433b9ec7-cc31-43c3-938c-6dfd42cf3b57%257D%2540%257Bad907af8-9a88-484a-b020-ea10437dadf8%257D     
 &emsp;&emsp;eService：http://eservice.mediatek.com/eservice-portal/issue_manager/update/2062164
 
