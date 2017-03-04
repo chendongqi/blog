@@ -19,13 +19,13 @@ tags:
 ```java
     mSystemServiceManager.startService(DeviceIdleController.class);
 ```
-&emsp;&emsp;关于doze模式的控制逻辑都是在这个新增的服务中实现的，在上一篇[初识Doze](http://chendongqi.me/2017/02/28/pm_doze_MeetDoze/)一文中已经提到了进入doze之后的几个功耗策略：限制网络连接、阻止partial类型的wakelock、阻止Alarm、系统不扫描wifi热点、阻止sync任务、不允许JobScheduler进行任务调度。所以除了控制逻辑之外，还在NetworkPolicyManagerService、JobSchedulerService、SyncManager、PowerManagerService和AlarmManagerService中加入了对doze状态的监听和查询接口来进行响应的操作。其控制逻辑和策略实现的代码关系如下图所示。在DeviceIdleController中实现对设备状态的控制和改变，并且通知其他相关注册了AppIdleStateChangeListener接口的服务进行处理，而反过来这些服务也可以向DeviceIdleController查询device的状态，是一种交互的关系。    
+&emsp;&emsp;关于doze模式的控制逻辑都是在这个新增的服务中实现的，在上一篇[初识Doze](https://chendongqi.github.io/blog/2017/02/28/pm_doze_MeetDoze/)一文中已经提到了进入doze之后的几个功耗策略：限制网络连接、阻止partial类型的wakelock、阻止Alarm、系统不扫描wifi热点、阻止sync任务、不允许JobScheduler进行任务调度。所以除了控制逻辑之外，还在NetworkPolicyManagerService、JobSchedulerService、SyncManager、PowerManagerService和AlarmManagerService中加入了对doze状态的监听和查询接口来进行响应的操作。其控制逻辑和策略实现的代码关系如下图所示。在DeviceIdleController中实现对设备状态的控制和改变，并且通知其他相关注册了AppIdleStateChangeListener接口的服务进行处理，而反过来这些服务也可以向DeviceIdleController查询device的状态，是一种交互的关系。    
 ![doze_stateMachine.png](https://chendongqi.github.io/blog/img/2017-02-28-pm_doze/doze_stateMachine.png)    
 
 ### 2. Doze模式中的状态机和其切换
 
 &emsp;&emsp;oze模式的核心思想涉及了设备状态的切换以及不同状态下的功耗策略处理，所以类似于wifi连接，状态机是整个Doze模式设计中的重要部分，这一章来详细介绍下Doze模式的状态切换以及其代码实现。    
-&emsp;&emsp;在[初识Doze](http://chendongqi.me/2017/02/28/pm_doze_MeetDoze/)一文中简单介绍了Doze模式中包含的几个状态，这里讲重点介绍下各个状态的含义以及切换的触发条件，并剖析代码中的实现。    
+&emsp;&emsp;在[初识Doze](http://chendongqi.github.io/blog/2017/02/28/pm_doze_MeetDoze/)一文中简单介绍了Doze模式中包含的几个状态，这里讲重点介绍下各个状态的含义以及切换的触发条件，并剖析代码中的实现。    
 
 #### 2.1 Doze状态机介绍
 
