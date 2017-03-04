@@ -71,7 +71,8 @@ sitting in a moving car, coach or train
 Examples of situations that do not trigger significant motion:
 phone in pocket and person is not moving
 phone is on a table and the table shakes a bit due to nearby traffic or washing machine
-At the high level, the significant motion detector is used to reduce the power consumption of location determination. When the localization algorithms detect that the device is static, they can switch to a low power mode, where they rely on significant motion to wake the device up when the user is changing location.    
+At the high level, the significant motion detector is used to reduce the power consumption of location determination. When the localization algorithms detect that the device is static, they can switch to a low power mode, where they rely on significant motion to wake the device up when the user is changing location.   
+
 &emsp;&emsp;概括的来说这个Sensor也就是检测有意义的行为的，细微的非用户行为的不会触发此Sensor，这个比之前的一些Sensor如加速度传感器、GSensor等的数据变化来的更加有意义。    
 &emsp;&emsp;大致了解了SignificantMotion之后再来继续看它的listener，当onTrigger被回调时，调用significantMotionLocked来处理    
 ```java
