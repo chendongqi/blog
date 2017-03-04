@@ -142,7 +142,7 @@ At the high level, the significant motion detector is used to reduce the power c
     mState = STATE_IDLE_PENDING;
 ```
 &emsp;&emsp;这里的delay时间是什么呢？还记得 [ Doze代码分布和状态机切换 ](https://chendongqi.github.io/blog/2017/03/01/pm_doze_statemachine/)介绍中的状态机切换图吗     
-![doze_stateMachine.png](https://chendongqi.github.io/blog/img/2017-02-28-pm_doze/doze_stateMachine.png)
+![doze_mode_state.png](https://chendongqi.github.io/blog/img/2017-02-28-pm_doze/doze_mode_state.png)
 &emsp;&emsp;30秒就是从LOCATION状态切换到IDLE的delay时间，而60分钟就是一个IDLE周期的超时时间，超时之后就进入到IDLE_MAINTANCE    
 &emsp;&emsp;以上就是从INACTIVE切换到IDLE_PENDING的整个流程。    
 
