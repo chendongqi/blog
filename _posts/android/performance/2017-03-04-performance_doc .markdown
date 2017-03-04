@@ -13,7 +13,7 @@ tags:
 ---
 
 
-### 1、理论部分：
+### 1. 理论部分：
 
 &emsp;&emsp;**Android Performance Pattern系列资料**
 
@@ -42,7 +42,7 @@ tags:
 &emsp;&emsp;--[Android性能优化之被忽视的优化点](https://zhuanlan.zhihu.com/p/24890330)    
     
 
-### 2.工具部分
+### 2. 工具部分
 
 &emsp;&emsp;**性能分析工具使用：**  
 &emsp;&emsp;--[Android性能测试工具汇总](http://www.jianshu.com/p/dab8324c5500)  
