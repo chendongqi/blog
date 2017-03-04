@@ -1,7 +1,7 @@
 ---
 layout:      post
 title:      "Android电源管理之Doze模式专题系列（三）"
-subtitle:   "状态切换剖析之ACTIVE到INACTIVE"
+subtitle:   "状态切换剖析之ACTIVE-->INACTIVE"
 navcolor:   "invert"
 date:       2017-03-04
 author:     "Cheson"
