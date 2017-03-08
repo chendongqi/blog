@@ -55,7 +55,8 @@ tags:
 
 **胡凯翻译：**    
 [Android性能优化典范 - 第4季](http://hukai.me/android-performance-patterns-season-4/)
-> Android性能优化典范第4季的课程学习笔记终于在2015年的最后一天完成了，文章共17个段落，包含的内容大致有：优化网络请求的行为，优化安装包的资源文件，优化数据传输的效率，性能优化的几大基础原理等等。    
+> Android性能优化典范第4季的课程学习笔记终于在2015年的最后一天完成了，文章共17个段落，包含的内容大致有：优化网络请求的行为，优化安装包的资源文件，优化数据传输的效率，性能优化的几大基础原理等等。   
+
 ### Android Performance Patterns 5
 
 **google youtube videos：**     
