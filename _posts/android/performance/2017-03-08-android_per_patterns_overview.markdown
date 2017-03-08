@@ -5,7 +5,7 @@ subtitle:   "Android Performance Patterns系列学习思考和实践笔记"
 navcolor:   "invert"
 date:       2017-03-08
 author:     "Cheson"
-header-img: "https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_common.png"
+#header-img: "https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_common.png"
 catalog: true
 tags:
     - Android
@@ -20,7 +20,7 @@ tags:
 
 ### Android Performance Patterns 1
 
-**google youtube videos：** 
+**google youtube videos：**     
 [Android Performance Patterns Season 1](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE)    
 ![android_perf_patterns_s1](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_s1.png)
 **胡凯翻译：**    
@@ -29,7 +29,7 @@ tags:
 
 ### Android Performance Patterns 2
 
-**google youtube videos：** 
+**google youtube videos：**     
 [Android Performance Patterns Season 2](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE)    
 ![android_perf_patterns_s2](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_s2.png)
 
@@ -39,7 +39,7 @@ tags:
 
 ### Android Performance Patterns 3
 
-**google youtube videos：** 
+**google youtube videos：**     
 [Android Performance Patterns Season 3](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE)    
 ![android_perf_patterns_s3](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_s3.png)
 
@@ -49,7 +49,7 @@ tags:
 
 ### Android Performance Patterns 4
 
-**google youtube videos：** 
+**google youtube videos：**     
 [Android Performance Patterns Season 4](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE)    
 ![android_perf_patterns_s4](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_s4.png)
 
@@ -58,7 +58,7 @@ tags:
 > Android性能优化典范第4季的课程学习笔记终于在2015年的最后一天完成了，文章共17个段落，包含的内容大致有：优化网络请求的行为，优化安装包的资源文件，优化数据传输的效率，性能优化的几大基础原理等等。    
 ### Android Performance Patterns 5
 
-**google youtube videos：** 
+**google youtube videos：**     
 [Android Performance Patterns Season 5](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE)    
 ![android_perf_patterns_s5](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_s5.png)
 
@@ -68,7 +68,7 @@ tags:
 
 ### Android Performance Patterns 6
 
-**google youtube videos：** 
+**google youtube videos：**     
 [Android Performance Patterns Season 6](https://www.youtube.com/playlist?list=PLWz5rJ2EKKc9CBxr3BVjPTPoDPLdPIFCE)    
 ![android_perf_patterns_common](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/android_perf_patterns_common.png)
 
