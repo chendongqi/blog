@@ -70,7 +70,14 @@ tags:
     </RelativeLayout>
 ```
 &emsp;&emsp;从布局上看最多有四层背景图片需要绘制，在机器上呈现的效果如下，此类问题就可以通过去除不显示的区域的绘制来达到减少绘制层级的问题。    
-![overdraw_demo.png](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_ui/overdraw_demo.png)
+![overdraw_demo.png](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_ui/overdraw_demo.png)    
+&emsp;&emsp;当遇到过于复杂的自定义布局(在onDraw方法中实现了重绘)，此时系统将无法检测到Over draw。这种情况下可以通过Canvas类提供的两个方法来做优化。[Canvas.clipRect()](https://developer.android.com/reference/android/graphics/Canvas.html)：这个方法指定了一块矩形区域，在此区域内的View会被绘制，此区域外的绘制指令将不会被执行，部分在此区域内的内容也会被绘制。此方法可以用来帮助很好的绘制那些拥有多个重叠界面的自定义界面。    
+![overdraw_reduce_cpu_gpu.png](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_ui/overdraw_reduce_cpu_gpu.png)
+&emsp;&emsp;[Canvas.quickreject()](https://developer.android.com/reference/android/graphics/Canvas.html)：这个方法用来判断指定的矩形区域是否没有和当前区域完全相交。
+> Return true if the specified rectangle, after being transformed by the current matrix, would lie completely outside of the current clip. Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).
+
+&emsp;&emsp;以上两个方法暂未实际用于优化中，理解还未深刻，后续还会更新体验。    
+&emsp;&emsp;另有两个疑问还未寻求到解答，暂且记录在这里：1、布局的扁平化对over draw是否有改善？2、移除非必要的控件肯定是能减少布局的onMesure和onDraw时间，那么通常做的将控件设置为INVISIBLE或者GONE时，是否还会进行onMesure和onDraw呢？    
 
 ### 3. Understand VSYNC
 
@@ -100,7 +107,7 @@ Tearing产生的原因：BB通过LCD IF将数据刷到DRIVER IC的GRAM的时间T
 针对有FMARK的屏，硬件将FMARK脚接到BB LCDC TE脚，软件上开启TE功能。原理是，LCM GRAM中的显示信息被刷新到LCD PANEL后，LCD Driver IC会发出一个同步sync信号告诉BB可以更新 Frame Buffer内容到LCM Gram了。保证了上述T0 、T1时间上不会重叠
 针对没有FMARK的屏，只能尽量调整LCD IF送数据的时序及LCD Driver IC刷新频率，使T0、T1达到同步
 
-&emsp;&emsp;此处解释了一种LCD IF送数据的时序和IC刷新的时序不同步导致的切屏现象。我们在项目中遇到此类问题时会先区分是FrameBuffer中的数据有问题还是IC的时序问题，那么有一个简单的方式可以来做这一判定。**当出现切屏现象时，保留现场，用DDMS工具来截屏，而截屏是直接从FrameBuffer中取得数据，如果截屏界面完整则可以由驱动来做进一步分析IC，如果截屏也有切屏现象，则很明显是上层准备的数据就有问题了**。
+&emsp;&emsp;此处解释了一种LCD IF送数据的时序和IC刷新的时序不同步导致的切屏现象。我们在项目中遇到此类问题时会先区分是FrameBuffer中的数据有问题还是IC的时序问题，那么有一个简单的方式可以来做这一判定。**当出现切屏现象时，保留现场，用DDMS工具来截屏，而截屏是直接从FrameBuffer中取得数据，如果截屏界面完整则可以由驱动来做进一步分析IC，如果截屏也有切屏现象，则很明显是上层准备的数据就有问题了**。    
 &emsp;&emsp;**另一种方法则需要root权限来操作**，然后用工具查看：    
 ```bash
     adb shell
@@ -184,6 +191,14 @@ It’s also worth noting that large spikes in this bar can come from re-submitti
 &emsp;&emsp;在Android里面那些由主题所提供的资源，例如Bitmaps，Drawables都是一起打包到统一的Texture纹理当中，然后再传递到GPU里面例如以下创建的纹理集。而文字的栅格化会更加复杂，需要使用skia字库或者是第三方字库来做栅格化    
 ![texture_collection.png](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_ui/texture_collection.png)
 &emsp;&emsp;关于硬件加速的的一些简单资料可以参考：[Android HWUI硬件加速模块浅析](http://www.2cto.com/kf/201507/425856.html)和[android硬件加速总结](http://blog.csdn.net/xu_fu/article/details/48208795)
+
+### 6. Update & Performance
+
+&emsp;&emsp;Android界面更新时会导致View的重绘，这个会导致如下的流程，CPU计算重新生成DisplayList，交给GPU执行渲染命令。对于一个View的整体来说，如果在渲染完之后后续操作中只是其位置发生了变化，则GPU只需要重新执行一次渲染命令即可。但是如果View中的控件发生变化，这个变化可以是位置或者尺寸等，例如一个Button的大小发生了改变，那么需要重新计算这个Button在View中的位置，和其他子View的相对位置，其他子View的位置等信息。那么就需要重新生成DisplayList，然后GPU再重新渲染，所以当布局复杂时，频繁的更新也可能会导致性能问题。    
+&emsp;&emsp;在开发只模式下，有一个“Show GPU view updates”选项，开启之后在GPU渲染时会显示渲染的区域(也就是说用到硬件加速的应用)，此工具被网友称为鸡肋工具，自己使用中也还未发现具体有何作用。附上一篇介绍代码实现的文章[Show GPU View Update实现原理](http://www.wtoutiao.com/p/1bfiv8u.html)。    
+
+
+
 
 
 
