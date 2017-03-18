@@ -41,6 +41,8 @@ tags:
 
 ### 1. Memory Churn & Performance
 
+#### 1.1 Typical Case
+
 &emsp;&emsp;这一节中就来详细看下内存抖动的情况，以一个非常简单的案例开场，来看这样一段代码  
 ```java
     public class MainActivity extends AppCompatActivity {
@@ -68,6 +70,9 @@ tags:
         }
     }
 ```
+
+#### 1.2 Memory Monitor & Allocation Tracker
+
 &emsp;&emsp;这段程序跑起来后在Android Studio中用Memory Monitor工具来查看内存的情况，出现了非常明显的内存抖动情况，其引发的原因就是for循环中的分配对象，每次循环结束后都会被回收，导致内存不停的变化。    
 ![memory_churn.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/memory_churn.png)
 &emsp;&emsp;在实际调试一个应用时，用Memory Monitor可以监视到内存的情况，但是无法定位到代码，如果看到有内存频繁或者长时间的内存抖动情况，如何去确定代码中的根因呢。这里需要用到Android Monitor中的另一个工具：Allocation Tracker。此工具的使用是需要手动抓取一段时间内的内存分配情况的，在操作之前点击下图中的Start Allocation Tracking，结束操作之后再点击stop。  
@@ -75,7 +80,21 @@ tags:
 &emsp;&emsp;例如抓取到的内存抖动的一段内存情况，可以看到thread-1占了几乎100%的内存，分配的size很大，顺藤摸瓜就能找到问题的代码在于decodeResource方法中。  
 ![allocation_tracker_result.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/allocation_tracker_result.png)
 &emsp;&emsp;这个案例非常简单，但也是此类问题非常典型的案例，通常在for循环中分配内存时就会出现这个问题，另一个可能导致内存抖动的罪魁祸首是在onDraw方法中分配内存，当view被频繁重绘的时候也会导致内存抖动。这里的内存抖动问题解决起来就很简单了，把对象分配的动作放在循环外就可以。  
-&emsp;&emsp;直观了解了内存抖动之后来思考这样一个问题，内存抖动为什么会引起GC呢？
+
+#### 1.3 What is Memory Churn Exactly 
+
+&emsp;&emsp;直观了解了内存抖动之后来思考这样一个问题，内存抖动为什么会引起GC呢？要思考这个问题之前先要明白GC的一个原理，什么情况下会触发GC。在前一节介绍GC时的老罗博客的参考资料中给出了GC的4中触发条件    
+> GC_FOR_MALLOC: 表示是在堆上分配对象时内存不足触发的GC。
+GC_CONCURRENT: 表示是在已分配内存达到一定量之后触发的GC。
+GC_EXPLICIT: 表示是应用程序调用System.gc、VMRuntime.gc接口或者收到SIGUSR1信号时触发的GC。
+GC_BEFORE_OOM: 表示是在准备抛OOM异常之前进行的最后努力而触发的GC。
+实际上，GC_FOR_MALLOC、GC_CONCURRENT和GC_BEFORE_OOM三种类型的GC都是在分配对象的过程触发的。  
+&emsp;&emsp;在这个背景知识的基础上再来理解内存抖动的情况，以上面案例中的代码来思考，在循环内部分配内存后，当结束一次循环时，局部变量虽然已经失效了，但是其内存空间并没有立即被回收（虽然Java可以通过GC自动回收内存，但也不是即时的），即使在使用完对象之后立即将其置为null，也不会立即回收其所占的内存空间，还是需要等待系统的GC操作。所以我们看到的内存抖动现象其实不应该被称之为频繁引起GC的原因，而应该理解为频繁分配对象的操作，导致了Young Generation中的剩余空间频繁达到阈值（内存抖动截图中的波峰）而触发GC，然后可用内存又降下来（波谷），产生了内存抖动的现象。  
+
+#### 1.4 What Can Help Us
+
+&emsp;&emsp;对
+
 
 
 内存抖动的例子：for循环onDraw方法中分配内存，
