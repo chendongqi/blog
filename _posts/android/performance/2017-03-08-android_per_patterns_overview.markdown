@@ -14,9 +14,11 @@ tags:
 ---
 
 ### 前言
-&emsp;&emsp;本篇写在该系列文章之前，作为本系列的前言以及介绍Android Performance Patterns的原始资料的出处，感谢google developer对此的贡献和胡凯大神对该系列资料的翻译和整理。    
-&emsp;&emsp;本人在Android系统性能优化上摸爬滚打了一年有余，尽得片鳞只爪，尤觉管中窥豹，自愁前路暗淡。偶得暇兴致起，搜罗各大论坛android性能相关资料，遇到了Android Performance Patterns系列视频和其胡凯对该系列的翻译，初阅之，不胜欣喜，正和我追求原理之本心，弥补拼凑之前零散的性能知识。值此女神佳节留下此篇以开始记录对该系列的学习思考和实践的历程和心得。    
-&emsp;&emsp;下面将附上原始的google资料地址和胡凯翻译的文章地址，而本人在我此系列的文章中更多的是记录个人的感悟和理解和在程序上的实践以供自己和他人的参考。    
+  本篇写在该系列文章之前，作为本系列的前言以及介绍Android Performance Patterns的原始资料的出处，感谢google developer对此的贡献和胡凯大神对该系列资料的翻译和整理。    
+  本人在Android系统性能优化上摸爬滚打了一年有余，尽得片鳞只爪，尤觉管中窥豹，自愁前路暗淡。偶得暇兴致起，搜罗各大论坛android性能相关资料，遇到了Android Performance Patterns系列视频和其胡凯对该系列的翻译，初阅之，不胜欣喜，正和我追求原理之本心，弥补拼凑之前零散的性能知识。值此女神佳节留下此篇以开始记录对该系列的学习思考和实践的历程和心得。   
+  附上个人在从事安卓以来建立的性能的知识框架。  
+  ![Performance_knowledge_architecture.png](https://chendongqi.github.io/blog/img/2017-03-08-android_perf_patterns_overview/Performance_knowledge_architecture.png)
+  下面将附上原始的google资料地址和胡凯翻译的文章地址，而本人在我此系列的文章中更多的是记录个人的感悟和理解和在程序上的实践以供自己和他人的参考。    
 
 ### Android Performance Patterns 1
 
