@@ -33,8 +33,10 @@ tags:
 > **分代**  
 > 将所有的新建对象都放入称为年轻代的内存区域，年轻代的特点是对象会很快回收，因此，在年轻代就选择效率较高的复制算法。当一个对象经过几次回收后依然存活，对象就会被放入称为老生代的内存空间。对于新生代适用于复制算法，而对于老年代则采取标记-压缩算法。  
 
-&emsp;&emsp;看完这一段也就可以理解为何Young Generation中执行GC会比较快，因为其算法是用Copying，是一种以空间换时间的做法。  
-&emsp;&emsp;当然老罗的博客是不可缺少的一手资料[Dalvik虚拟机垃圾收集（GC）过程分析](http://blog.csdn.net/luoshengyang/article/details/41822747)    
+  看完这一段也就可以理解为何Young Generation中执行GC会比较快，因为其算法是用Copying，是一种以空间换时间的做法。  
+  当然老罗的博客是不可缺少的一手资料[Dalvik虚拟机垃圾收集（GC）过程分析](http://blog.csdn.net/luoshengyang/article/details/41822747)    
+
+​	关于GC的算法公司同事做了更详细的分析，参考[java虚拟机回收算法](http://wiki.huaqin.com:8090/pages/viewpage.action?pageId=29409597) 
 
 
 ### 1. Memory Churn & Performance
@@ -202,6 +204,8 @@ for(int i = 0; i < 10; i++) {
 
 ​	这一节中以一个案例来介绍内存泄露的几种排查方法。在网上也看了很多别人总结的分析方法以及什么情况下会出现内存泄露，躬身去做之后才能体会到其中的众多内涵所在，在开始时先抒发下个人感悟。首先要说的是关于内存泄露的案例总结，讲了很多各种情况（后面会稍作介绍），但是当我亲自去写案例时发现这些程序都没有出现内存泄露的情况，当时分析的方法是参考他人介绍的反复启动退出Activity来分析这个Activity中的对象是否都被释放了。结合前面的内存分配和管理的背景知识中的介绍，我们需要关注的内存泄露是在堆中动态分配并且GC无法收回的对象的内存。但是忽略了一个大前提，Java层所能够操作到的堆内存是在其进程的JVM层面上，当程序退出时，这部分内存不管GC是否能够回收到，都会被系统给收回了，所以当程序退出时，也就不存在内存泄露了。这是内存泄露这本秘籍的修炼总纲，如没有想通这一点，无论是在看别人各处转载的文章或是亲自做案例抑或后续的coding，每每遇到内存泄露就会觉得不是那么通透，仍有雾里看花似是而非的感觉。  
 
+##### 2.4.1 Case
+
 ​	这里要介绍的案例还是网上介绍内存泄露被说的最多的一个例子，使用集合导致内存泄露，先贴下案例的代码
 
 ```java
@@ -244,7 +248,43 @@ ublic class MainActivity extends AppCompatActivity {
 
 ​	通过对此案例的研究也想通了内存泄露的另一个本质，其实内存泄露也并非那么严重和可怕，根本没有到一种程序员谈虎色变的地步。个中本质和被泄露的变量的作用域是紧密相连的，其含义也可以从上一段中加黑的“及时回收”中细细体悟。在我写的这个案例中，将vector数组用static做了修饰`private static Vector vector = new Vector(10);`，因为static的静态变量生命周期是和此程序的生命周期是一致的，所以就算跳转到此程序的另一空白Activity后，vector的对象也是不会被收回，那么可以表述为在此程序内部出现了内存泄露；那么如果去掉static修饰，Vector对象就成了第一个Activity类的成员变量，而当跳转到第二个空白Activity之后，第一个Activity变成不可达对象，其中所有的成员变量所占内存都被回收，那么也就是说内存泄露的作用域缩小了，只是变成了第一个Activity内部，更准确的来说，是在for循环结束一直到该Activity生命周期结束的时间内是存在内存泄露的；那么如果我们更加缩小Vector对象的作用域呢，比如说就放在onResume方法中，那么在onResume结束之后存放在栈中的Vector的引用被销毁，其对象也变得不可达了，内存泄露也就不存在了。  
 
-​	前面讨论了从作用域的角度来看内存泄露，作用域可以理解为对象的作用域和内存泄露起作用的作用域。从这个角度来归结，内存泄露的产生即是赋予了一个对象不合适的作用域。资治通鉴中讲楚汉相争篇，刘邦
+​	前面讨论了从作用域的角度来看内存泄露，作用域可以理解为对象的作用域和内存泄露起作用的作用域。从这个角度来归结，内存泄露的产生即是赋予了一个对象不合适的作用域。资治通鉴中讲楚汉相争篇，刘邦在一统天下之后就开始大肆迫害萧何，张良等一伙开国功臣，其中原因之一在于刘邦多疑，害怕功高盖主。历史上功高盖主的例子也是时常有之，追随李世民打江山的一帮瓦岗英雄，得善终的也是寥寥无几。其实功高盖主的事和这里的内存泄露在一定层面上也是相通的，当一个变量的作用域过大（战功赫赫，统领三军），当不需要此变量的时候内存空间无法被收回（平定天下之后还不交出兵权），那么内存泄露就产生了（皇帝就沦为傀儡了，例如少年康熙和鳌拜）。所以历史上被广为批判的迫害开国元勋的罪行，在这里如果用纯理性的角度去辩证，何错之有？  
+
+##### 2.4.2 Use Heap Tool To Check Memory Leak
+
+​	讨论了这么多内存泄露的原理和自己的思考，下面来看下当一个应用是一个黑盒时如何去判断是否存在内存泄露的情况，还是通过上面的案例来介绍一种非常典型的方法。用到的工具是Heap Tool来查看待观察进程的堆内存的情况，分析的思路如下：1、启动待分析Activity界面，手动触发几次GC，记录下堆中内存情况；2、跳转到其他Activity（最好是一个空白的Activity或者是其他确保没有内存泄露的Activity）；3、返回到待观察Activity界面；4、重复步骤2和3多次，最终退回到待观察Activity界面，记录下Heap内存情况；5、对比两次记录的Heap分析待观察界面是否存在内存泄露。下面来看下实际操作过程。  
+
+​	启动测试应用之后，启动DDMS，然后选中测试进程  
+
+ ![memleak_vmheap.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/memleak_vmheap.png)  
+
+​	进入到该案例中的MainActivity中之后点击Heap Tool的“Show heap updates”，然后手动触发几次GC之后抓下heap中的内存情况，如下图。  
+
+ ![memleak_1.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/memleak_1.png)    
+
+​	然后启动到Main2Activity（一个空白的Activity），再返回到MainActivity，多次重复该操作后，停留在MainActivity，然后再手动触发几次GC，当Heap内存情况不再改变之后再记录下heap中的内存情况，如下下图  
+
+ ![memleak_2.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/memleak_2.png)
+
+​	可以对比两组数据来判断MainActivity中是否有出现内存泄露，第一组是看Heap Size和Allocated，可以发现第二次的截图中明显比第一次截图中都有增长，这里需要说明的最直接的应该是看free的空间在出现不停减小时就可以推断出有内存泄露，其实不然，因为在需要给对象分配内存时，堆的大小是会增长的，所以free的值可能反而会增长一些或者保持不变，当heap size达到上限时看free才有意义；第二组数据可以看data object的count和total size。如果没有内存泄露的情况，当进入到Main2Activity时，MainActivity中的成员变量都被GC回收掉了，反复操作之后count和total size的值也应是不变的，这个例子中可以明显看到这组数据也是在不停增长。说明MainActivity的对象并没有被释放掉。
+
+​	罪魁祸首就是` vector.add(o);`当注释掉这一句之后，同样的操作就不会看到heap size或者是data object有持续增长的情况出现了。另外在这个案例中出现了另一个没有预料到的结果，`private static Vector vector = new Vector(10);`将这里的static去掉之后再测，依照之前理论的推测，当退出MainActivity对象被销毁，成员变量所占的内存也就被GC回收了，但是结果是依旧出现了内存泄露的情况。如何解释这个情况？思考了下这个现象，还是需要从Activity的生命周期着手，当跳转到Main2Activity中时，MainActivity处于onStop的状态，此时Activity是不会被销毁的（根源在此），只有走到onDestroy时才会被彻底销毁掉，而触发onDestroy是有条件的，要不就是系统内存不足触发lmk或者是该应用整个退出了。所以在这个案例中，Activity的成员变量的生命周期可能也会很长，内存泄露的危害程度比之前理论推测的要高了一分。  
+
+##### 2.4.3 Use Memory Monitor To Check Memory Leak
+
+​	除了DDMS中的Heap Tool，AS中的Memory Monitor也可以做到同样效果的分析效果，我自身更倾向于Memory Monitor。首次进入MainActivity后记录下heap中的memory信息  
+
+ ![android_monitor_memoryleak_base.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/android_monitor_memoryleak_base.png)
+
+​	同样做内存泄露的操作之后截图如下  
+
+ ![android_monitor_memoryleak_1.png](https://chendongqi.github.io/blog/img/2017-03-16-android_perf_patterns_memory/android_monitor_memoryleak_1.png)
+
+​	对比查看Allocated的值就可以发现一致在增长，从而推断出内存泄露的情况。  
+
+##### 2.4.4 Who Is The Murderer
+
+​	确定存在内存泄露之后，紧接而来的问题是谁导致了内存泄露。漫谈个观点，理工科问题的解决都是一脉相承，程序员分析bug和医生看病，警察破案都是同样的原理，找线索，用工具，推断，验证等等手段和思路都是可以相互借鉴的，区别只在于对象不同导致的某些特性差异。继续回到主题，如何去查找内存泄露的罪魁祸首，需要用到
 
 ### 3. Tools
 
