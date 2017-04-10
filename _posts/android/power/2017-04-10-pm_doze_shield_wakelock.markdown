@@ -34,11 +34,11 @@ case MSG_REPORT_IDLE_ON: {
     getContext().sendBroadcastAsUser(mIdleIntent, UserHandle.ALL);
     EventLogTags.writeDeviceIdleOnComplete();
 } break;
-```  
+```
 &emsp;&emsp;首先需要搞清楚的是这个mLocalPowerManager和PMS的关系。它是PowerManagerInternal的对象，PowerManagerInternal.java位于framework/base/core/java/android/os/下，是一个抽象类，而在PMS中定义了一个LocalService继承自LocalPowerManager并实现了abstract方法  
 ```java
 private final class LocalService extends PowerManagerInternal
-```  
+```
 &emsp;&emsp;在PowerManagerService在SystemServer中被启动时，会将本身以POWER_SERVICE这个名称注册，由ServiceManager来管理，同时也会添加一个类型为PowerManagerInternal的LocalService的服务实例  
 ```java
 @Override
@@ -49,7 +49,7 @@ public void onStart() {
     Watchdog.getInstance().addMonitor(this);
     Watchdog.getInstance().addThread(mHandler);
 }
-```  
+```
 &emsp;&emsp;通过SystemService中接口来添加  
 ```java
 /**
@@ -58,7 +58,7 @@ public void onStart() {
 protected final <T> void publishLocalService(Class<T> type, T service) {
     LocalServices.addService(type, service);
 }
-```  
+```
 &emsp;&emsp;最后通过LocalServices中addService加入到sLocalServiceObjects这个ArrayMap中   
 ```java
 /**
@@ -72,13 +72,13 @@ public static <T> void addService(Class<T> type, T service) {
         sLocalServiceObjects.put(type, service);
     }
 }
-```  
+```
 &emsp;&emsp;如果要用这个服务的时候就如下   
 ```java
 private PowerManagerInternal mLocalPowerManager;
 ...
 mLocalPowerManager = getLocalService(PowerManagerInternal.class);
-```  
+```
 &emsp;&emsp;以上简单说明了下PowerManagerInternal这个服务的由来和注册使用方式，下面就可以随意用它了。然后言归正传，来看mLocalPowerManager.setDeviceIdleMode(true)这个调用的下文。在PMS中，这个方法实际上又直接去调用了setDeviceIdleModeInternal来处理（framework中惯用的伎俩）  
 ```java
 void setDeviceIdleModeInternal(boolean enabled) {
@@ -94,7 +94,7 @@ void setDeviceIdleModeInternal(boolean enabled) {
         }
     }
 }
-```  
+```
 &emsp;&emsp;这里把mDeviceIdleMode改成true，然后接着调用updateWakeLockDisabledStatesLocked来更新电源所的状态  
 ```java
 private void updateWakeLockDisabledStatesLocked() {
@@ -120,8 +120,8 @@ private void updateWakeLockDisabledStatesLocked() {
         updatePowerStateLocked();
     }
 }
-```  
-&emsp;&emsp;要做了两件事，首先是遍历现在所有的WakeLock，针对类型为PARTIAL_WAKE_LOCK的电源锁，通过setWakeLockDisabledStateLocked方法来设置此电源锁是否可以disable  
+```
+  做了两件事，首先是遍历现在所有的WakeLock，针对类型为PARTIAL_WAKE_LOCK的电源锁，通过setWakeLockDisabledStateLocked方法来设置此电源锁是否可以disable  
 ```java
 private boolean setWakeLockDisabledStateLocked(WakeLock wakeLock) {
     if ((wakeLock.mFlags & PowerManager.WAKE_LOCK_LEVEL_MASK)
@@ -146,8 +146,8 @@ private boolean setWakeLockDisabledStateLocked(WakeLock wakeLock) {
     }
     return false;
 }
-```  
+```
 &emsp;&emsp;其原理就是在mDeviceIdleMode为true时，将所有的app uid且不在白名单中程序申请的电源锁都忽略掉。设置完之后通知释放可以disable的电源锁。然后第二步就是PMS中非常常见的一个动作，更新mDirty的值，然后调用updatePowerStateLocked来更新电源状态。  
-&emsp;&emsp;PMS中做的事就如以上所介绍的，总结一下过程就是：便利所有类型为PARTIAL_WAKE_LOCK的电源锁，将其中为application uids并且不是在白名单中的程序申请的电源锁设为disable状态，然后通知释放掉disable的电源锁，最后在更新整个电源状态。  
-    
+  PMS中做的事就如以上所介绍的，总结一下过程就是：便利所有类型为PARTIAL_WAKE_LOCK的电源锁，将其中为application uids并且不是在白名单中的程序申请的电源锁设为disable状态，然后通知释放掉disable的电源锁，最后再更新整个电源状态。  
+​    
 
