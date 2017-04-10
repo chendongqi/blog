@@ -1,6 +1,6 @@
 ---
 layout:      post
-title:      "Android电源管理之Doze模式专题系列（七）"
+title:      "Android电源管理之Doze模式专题系列（八）"
 subtitle:   "状态切换剖析之IDLE-->IDLE_MAINTENANCE"
 navcolor:   "invert"
 date:       2017-04-10
@@ -28,7 +28,7 @@ case STATE_IDLE:
     EventLogTags.writeDeviceIdle(mState, "step");
     mHandler.sendEmptyMessage(MSG_REPORT_IDLE_OFF);
     break;
-```  
+```
 ![state_idle_to_idlemaintance.png](https://chendongqi.github.io/blog/img/2017-02-28-pm_doze/state_idle_to_idlemaintance.png)  
 &emsp;&emsp;依照国际惯例，在开始切换IDLE_MAINTENANCE状态时，会先schedule一个Alarm，这个Alarm是用来定时触发进行从IDLE_MAINTENANCE再次切换到IDLE的。  
 &emsp;&emsp;这里也涉及到了状态持续时间的动态变化问题。mNextIdlePendingDelay的值初始为IDLE_PENDING_TIMEOUT(5分钟)，每切换一次就会通过mNextIdlePendingDelay乘以IDLE_PENDING_FACTOR（2）和MAX_IDLE_PENDING_TIMEOUT（10分钟）取最小值。   
@@ -39,7 +39,7 @@ MAX_IDLE_PENDING_TIMEOUT = mParser.getLong(KEY_MAX_IDLE_PENDING_TIMEOUT,
             !COMPRESS_TIME ? 10 * 60 * 1000L : 60 * 1000L);
 IDLE_PENDING_FACTOR = mParser.getFloat(KEY_IDLE_PENDING_FACTOR,
             2f);
-```  
+```
 &emsp;&emsp;所以从结果来看第一次IDLE_MAINTENANCE会持续5分钟，后面都是10分钟。然后是将当前状态改为IDLE_MAINTENANCE接下来就是和进入IDLE时一个相反的操作，发送一个MSG_REPORT_IDLE_OFF的message以及发送一个广播来通知各个接收器。在收到该消息之后做的处理也是和IDLE状态下相反的操作。  
 ```java
 case MSG_REPORT_IDLE_OFF: {
@@ -53,7 +53,7 @@ case MSG_REPORT_IDLE_OFF: {
         getContext().sendBroadcastAsUser(mIdleIntent, UserHandle.ALL);
         EventLogTags.writeDeviceIdleOffComplete();
     } break;
-```  
+```
 &emsp;&emsp;各个服务中所做的事情详见后面专门介绍Doze功耗策略的篇章。这里需要说明的一点时，在IDLE阶段时，通过setIdleUntil设置了Alarm，之后的Alarm就会被挂起添加到pending list中，那么这些Alarm后面又是如何被处理的呢？当进入IDLE_MAINTENANCE时，也就是这个这个Alarm被触发的时候，在AlarmManagerService中调用triggerAlarmsLocked，判断触发的是之前的Alarm，然后就restore之前被pending的其他Alarm。  
 ```java
 if (mPendingIdleUntil == alarm) {
@@ -61,5 +61,5 @@ if (mPendingIdleUntil == alarm) {
     rebatchAllAlarmsLocked(false);
     restorePendingWhileIdleAlarmsLocked();
 }
-```  
+```
 &emsp;&emsp;这篇要介绍的状态切换的内容也就到此为止，至此就讲完了Doze模式下所有的状态切换的流程和每个状态中所做的事。  
