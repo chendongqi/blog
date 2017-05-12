@@ -88,10 +88,11 @@ friends: [
         title: "待遇见志同道合的你",
         href: "https://github.com"
     },
-#{
-#        title: "乱序",
-#        href: "http://mida.re/"
-#    },{
+{
+        title: "小明",
+        href: "http://www.betterming.cn"
+    }
+#    ,{
 #        title: "前端外刊评论",
 #        href: "http://qianduan.guru/"
 #    },{
