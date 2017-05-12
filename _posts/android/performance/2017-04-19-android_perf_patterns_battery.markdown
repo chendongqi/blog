@@ -96,6 +96,8 @@ mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
   
 #### 2.5 JobScheduler
 
+  JobScheduler是在Android L上引入的一个机制，其基本思想也是为了把非即时的任务拖延到一起触发。它和AlarmManagerService中的延迟触发和分批机制也存在异曲同工之妙，只是较之后者，JobScheduler可以做的事更多，延迟触发的条件就不仅限于时间角度了，也可以是某个动作和状态的改变，例如连接WiFi、插入充电器等。具体的用法和API等不再这里赘述，可以参考google的介绍[JobScheduler](https://developer.android.com/reference/android/app/job/JobScheduler.html)。
+
 ### 3. How to Analyse
 
   这节介绍我在Android手机项目中获得的整机电流问题分析的经验，软件部分的电流问题两个大的原因来自于系统被异常唤醒和系统无法休眠，先来看下系统异常唤醒导致的电流问题。  
