@@ -16,7 +16,7 @@ tags:
 ### 1 概述  
 
 &emsp;&emsp;Linux kernel中有一个OOM的机制，就是Out Of Memory，用来应对系统内存不足的情况。当出现OOM时，内核有两种处理方式，1）死给你看；2）选择部分合适的process，杀掉之后空出些内存再积极的活下去。对于系统而言，第二种方式无疑是比较合适的处理。那么如何选择杀谁呢？内核中有一个oom_badness的函数用来给process打分，综合一些参数计算出分数，谁的分高就杀谁。这个就是linux kernel中处理低内存的一个方式。  
-&emsp;&emsp;这篇文章中要介绍的LowMemoryKiller（后面简称LMK）机制是Android加入的处理低内存的一种机制，其思路也是仿照内核的OOM来设计的。在Android中，进程的生命周期都是系统来控制的，用户结束应用之后并不代表着进程就被杀死了，这也是为了下次启动应用时能更加快速。在LMK机制中，定义了两组数组，一组为系统的内存警戒值oom_minfree，定义了6个内存警戒值；一组为进程分数oom_adj，定义了6个进程的分值。LMK的机制为：当系统的内存达到一个警戒值时，去杀掉大于等于对应分值的进程。  
+  这篇文章中要介绍的LowMemoryKiller（后面简称LMK）机制是Android加入的处理低内存的一种机制，其思路也是仿照内核的OOM来设计的。在Android中，进程的生命周期都是系统来控制的，用户结束应用之后并不代表着进程就被杀死了，这也是为了下次启动应用时能更加快速。在LMK机制中，定义了两组数组，一组为系统的内存警戒值oom_minfree，定义了6个内存警戒值；一组为进程分数oom_adj，定义了6个进程的分值。LMK的机制为：当系统的内存达到一个警戒值时，去杀掉大于等于对应分值的进程。  
 &emsp;&emsp;下面将从代码的角度来学习下LMK机制的实现。  
 
 ### 2 frameworks层
@@ -24,7 +24,7 @@ tags:
   oom_adj的分值是在用户层的代码中定义的，然后从上至下写入到sysfs文件系统的节点中。在Android4.0之后，frameworks中对oom_adj的定义都放在了ProcessList.java这个文件中（网上很多资料会说是在AMS和init.rc中，这个也是4.0之前的实现方式）。  
   下表中为ProcessList.java中对各种不同的process定义的分值。每种进程类型的含义资料待补充。  
 
-| UNKNOWN_ADJ            | 16   |
+| PROCESS                | ADJ  |
 | ---------------------- | ---- |
 | UNKNOWN_ADJ            | 16   |
 | CACHED_APP_MAX_ADJ     | 15   |
@@ -135,7 +135,7 @@ void applyDisplaySize(WindowManagerService wm) {
 }
 ```
   然后updateOomLevels方法会再走一次。以Tecno项目的例子，来看下前面讲过的流程中打出来的log。  
-![log.png](https://github.chendongqi.io/blog/img/2017-05-23-lmk/log.png)
+![log.png](https://chendongqi.github.io/blog/img/2017-05-23-lmk/log.png)
   可以看到最后scale的值计算为1.0。那么mOomMinFree数组的计算结果就是{36864, 49152, 61440, 73728, 204800, 296900}。  
   在计算完成之后还有两处代码可能会修正这个mOomMinFree  
 ```java
@@ -295,10 +295,10 @@ static void writefilestring(char *path, char *s) {
 #define INKERNEL_ADJ_PATH "/sys/module/lowmemorykiller/parameters/adj"
 ```
   可以在手机中查看下  
-![adj_minfree.png](https://github.chendongqi.io/blog/img/2017-05-23-lmk/adj_minfree.png)  
+![adj_minfree.png](https://chendongqi.github.io/blog/img/2017-05-23-lmk/adj_minfree.png)  
   查看设备节点会发现一个问题，minfree的数组确实为我们代码中写入的数组，但是adj的这组值却不是代码中传下去的{0,1,2,3,9,15}。  
   此处有玄机：从JB9.MP 后版本之后，LMK 自动将oom_adj 转换成 oom_score_adj ，即写入时依旧是按照oom_adj 写入，而读取出来时，则是oom_score_adj。这么做的好处是什么？用户空间只是负责配置这样两组数组，并传递下来写入到设备节点中。最后是由系统轮询内存时发现可用内存小于某一警戒值时再去杀死进程，而杀死哪个进程不是简单的由用户空间配置的oom_adj来决定的，这个只是一个计算因子，还会结果其他因素最后计算出一个进程的分数，也就是oom_score_adj，所以这里提前一步将oom_adj转换成了oom_score_adj，便于后面的处理。而每个进程也会有这样一个得分，存放在/proc/\<pid\>/oom_score_adj下面，可以看到下面截图，这个得分是一个动态计算的值，会直接和/sys/module/lowmemorykiller/parameters/minfree中对应。  
-![process_score.png](https://github.chendongqi.io/blog/img/2017-05-23-lmk/process_score.png)    
+![process_score.png](https://chendongqi.github.io/blog/img/2017-05-23-lmk/process_score.png)    
   oom_adj和oom_score_adj数值转换的伪代码逻辑如下  
 ```C
 if(oom_adj == 15) then oom_score_adj = 1000;
@@ -429,7 +429,7 @@ module_param_array_named(adj, lowmem_adj, short, &lowmem_adj_size,
 module_param_array_named(minfree, lowmem_minfree, uint, &lowmem_minfree_size,
 			 S_IRUGO | S_IWUSR);
 ```
-![lowmem_minfree.png](https://github.chendongqi.io/blog/img/2017-05-23-lmk/lowmem_minfree.png)   
+![lowmem_minfree.png](https://chendongqi.github.io/blog/img/2017-05-23-lmk/lowmem_minfree.png)   
   然后就是从小到大遍历lowmem_minfree数组中的警戒值，如果other_free且other_file这两个可用内存都小于警戒值，那么就记录下min_score_adj的值。如果min_score_adj和初始值相同，那么无需进行lowmemorykiller操作，输出log，解锁，然后返回0结束一次scan流程。否则的话继续往下走，将min_score_adj赋值给selected_oom_score_adj，作为后续选定需要杀死的进程adj。  
 ```C
 if (min_score_adj == OOM_SCORE_ADJ_MAX + 1) {
@@ -460,7 +460,7 @@ for_each_process(tsk)
 ```C
 #define for_each_process(p) \
 	for (p = &init_task ; (p = next_task(p)) != &init_task ; )
-```  
+```
   这里的逻辑就是便利系统中每一个task。然后又定义了个task_struct的指针p用来后面对每个task做处理，定义了一个oom_score_adj来存每个task的得分。用find_lock_task_mm来锁住一个task，将地址赋值给p。  
 ```C
 struct task_struct *p;
@@ -470,18 +470,18 @@ if (tsk->flags & PF_KTHREAD)
     continue;
 
 p = find_lock_task_mm(tsk);
-```  
+```
   取得这个task的oom_score_adj，这个就是/proc/\<pid\>/oom_score_adj，也即是在lmkd中写入的进程的得分。  
 ```C
 oom_score_adj = p->signal->oom_score_adj;
-```  
+```
   如果task的分值小于系统选出来的分值，那么这个task就不用处理，解锁之后继续下一个。  
 ```C
 if (oom_score_adj < min_score_adj) {
     task_unlock(p);
     continue;
 }
-```  
+```
   选择要杀死哪个进程？选择的算法如下：  
 ```C
 if (selected) {
@@ -491,7 +491,7 @@ if (selected) {
         tasksize <= selected_tasksize)
         continue;
 }
-```  
+```
   如果当前的task的oom_score_adj小于被选择的那个，那么不做修改；如果adj相同，那么当前task占用的内存小于等于被选择的那个时，也不做更改。换个角度来说也就是，第一个条件是看adj，谁大选谁；如果adj相同，那么选择占用内存大的那个。  
   接下来就是更新被选择的task的内存和adj。  
 ```C
@@ -500,7 +500,7 @@ selected_tasksize = tasksize;
 selected_oom_score_adj = oom_score_adj;
 lowmem_print(2, "select '%s' (%d), adj %d, score_adj %hd, size %d, to kill\n",
          p->comm, p->pid, REVERT_ADJ(oom_score_adj), oom_score_adj, tasksize);
-```  
+```
   然后打印出log记录，设置标志位，这是thread的标志位。  
 ```C
 if (selected) {
@@ -520,11 +520,11 @@ if (selected) {
     lowmem_deathpending = selected;
     lowmem_deathpending_timeout = jiffies + HZ;
     set_tsk_thread_flag(selected, TIF_MEMDIE);
-```  
+```
   最后一步就是发送一个signal来杀死进程，并且更新可用内存的值，进入下一次循环了。  
 ```C
 send_sig(SIGKILL, selected, 0);
 rem += selected_tasksize;
-```  
+```
 
 
