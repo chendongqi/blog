@@ -1,0 +1,108 @@
+# Site settings
+title: Cheson Blog
+SEOTitle: Cheson的博客 | Cheson Blog
+header-img: img/website/home-bg.jpg
+email: chendongqi2007@gmail.com
+description: "这里是Cheson的个人博客，Android技术探究的原创世界"
+keyword: "Cheson @Cheson cheson @cheson chendongqi @chendongqi Android系统 异常 性能 电源 框架 Exception Performance Power Framework"
+url: "chendongqi.github.io/blog"              # your host, for absolute URL
+baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
+
+
+
+# SNS settings
+RSS: false
+weibo_username:     chendongqi
+zhihu_username:     chendongqi
+github_username:    chendongqi
+twitter_username:   chendongqi
+facebook_username:  chendongqi
+linkedin_username:  firstname-lastname-idxxxx
+
+
+
+# Build settings
+# from 2016, 'pygments' is unsupported on GitHub Pages. Use 'rouge' for highlighting instead.
+highlighter: rouge
+permalink: pretty
+paginate: 10
+exclude: ["less","node_modules","Gruntfile.js","package.json","README.md","README.zh.md"]
+anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
+
+
+
+# Gems
+# from PR#40, to support local preview for Jekyll 3.0
+gems: [jekyll-paginate]
+
+
+
+
+# Markdown settings
+# replace redcarpet to kramdown,
+# although redcarpet can auto highlight code, the lack of header-id make the catalog impossible, so I switch to kramdown
+# document: http://jekyllrb.com/docs/configuration/#kramdown
+markdown: kramdown
+kramdown:
+  input: GFM                            # use Github Flavored Markdown !important
+
+
+
+# Disqus settings
+#disqus_username: cheson
+
+# Duoshuo settings
+#duoshuo_username: chendongqi2007
+# Share component is depend on Comment so we can NOT use share only.
+#duoshuo_share: true                     # set to false if you want to use Comment without Sharing
+
+
+
+
+# Analytics settings
+# Baidu Analytics 
+# ba_track_id: [your track id]
+
+# Google Analytics
+ga_track_id: 'UA-49627206-1'            # Format: UA-xxxxxx-xx
+ga_domain: chendongqi.github.io/blog
+
+
+
+# Sidebar settings
+sidebar: true                           # whether or not using Sidebar.
+sidebar-about-description: "男儿生来胆气豪，<br>轻踏石浪似平遥，<br>信步九州归来日，<br>谁与吾君解战袍。"
+sidebar-avatar: https://chendongqi.github.io/blog/img/website/avatar-cheson.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+
+
+
+# Featured Tags
+featured-tags: true                     # whether or not using Feature-Tags
+featured-condition-size: 1              # A tag will be featured if the size of it is more than this condition value
+
+
+
+# Friends
+friends: [
+    {
+        title: "待遇见志同道合的你",
+        href: "https://github.com"
+    },
+{
+        title: "小明",
+        href: "http://www.betterming.cn"
+    }
+#    ,{
+#        title: "前端外刊评论",
+#        href: "http://qianduan.guru/"
+#    },{
+#        title: "天镶的博客",
+#        href: "http://lingyu.wang/"
+#    },{
+#        title: "Luke 的自留地",
+#        href: "http://hmqk1995.github.io"
+#    },{
+#        title: "Ebn's Blog",
+#        href: "http://ebnbin.com/"
+#    }
+]

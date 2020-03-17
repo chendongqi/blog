@@ -1,0 +1,143 @@
+---
+layout: page
+title: "About Me"
+description: "I'm an Engineer, who is exploring Principle."
+header-img: "img/website/about-bg.jpg"
+---
+
+<!-- Language Selector -->
+<select class="sel-lang" onchange= "onLanChange(this.options[this.options.selectedIndex].value)">
+    <option value="0" selected> 中文 Chinese </option>
+    <option value="1"> 英文 English </option>
+</select>
+
+<!-- Chinese Version -->
+<div class="zh post-container">
+
+    <!--copied from markdown -->
+    <blockquote><p>骨感的现实无法遮挡<br>
+    追求丰满理想的心</p></blockquote>
+
+    <p>  Hey，我是<strong>Cheson</strong>，一个<strong>非典型程序员</strong>。<br>
+  现居上海，谋职于<a href="http://www.huaqin.com/">华勤通讯</a>，任Android应用开发工程师，离开学校这个大国企之后的第一份工作，也是目前一直在做的工作。主要从事Android系统相关需求开发和问题分析，和<a href="https://sso.mediatek.com/eai/Login.aspx">MTK</a>打交道比较多。<br>
+  除却工作，所剩无几的时间都被用来培养个人爱好了。非典型程序员的爱好当然不会是Dota，LOL之类的，那些都是过去式了，顿悟之后玩起了吉他，素描，还有刚准备入手的电钢。当然还有很大一部分是运动方面的爱好，随着环境和年龄的变化，从以前的“篮足排乒羽轮滑”过渡到了现在主要的“羽毛球和户外”，也入手了一块滑板（初衷是为了代步）。<br>
+  喜欢阅读宇宙天体物理相关的书籍，很大一部分是宇宙科幻小说，这主要是受大刘的三体系列影响，之后一发不可收拾的狂买宇宙科幻作家的作品。<br>
+  喜欢好听的流行音乐，好听的定义对于而言我也就是感觉，听着舒服甚至于起鸡皮疙瘩。而学吉他之后又一发不可收拾的喜欢了民谣，喜欢那简单的谱曲和真实的词所带来的心灵冲击。</p>
+</div>
+
+<!-- English Version -->
+<div class="en post-container">
+    <blockquote><p>Live more. <br>
+    Learn more.</p></blockquote>
+
+   <p>  Hey，I'm <strong>Cheson</strong>，an <strong>Atypical Software Engineer</strong>.<br>
+      I am living in Shanghai now and have been an Android SoftWare Engineer in <a href="http://www.huaqin.com/">HQ</a> until now after graduating from school. I'm mainly responsible for <strong>Android system request development and problem analysis</strong>.<br>
+       I spend my spare time developing personal hobbies including <strong>guitar, sketching and electric piano</strong>. What's more I also like sports very much. I used to play basketball, football, volleyball, table tennis, badminton and roller-skating. While with the environment changing and age increasing I mainly play badminton and enjoy outdoor sports like <strong>hiking and climbing</strong>. And Recenly I have started with skateboards.<br>
+       Nowadays, I'm interested in <strong>Cosmic Physics</strong> and most of the books read recent days are <strong>Space Science Fictions</strong>.<br>
+       I use to like pop music which makes me comfortable or excited. While after learning guitar I also falled in love with ballad music. The simple melody and rustic lyric always strike my soul.</p>
+   </div>
+
+<!-- Handle Language Change -->
+<script type="text/javascript">
+    // get nodes
+    var $zh = document.querySelector(".zh");
+    var $en = document.querySelector(".en");
+    var $select = document.querySelector("select");
+
+    // bind hashchange event
+    window.addEventListener('hashchange', _render);
+
+
+    // handle render
+    function _render(){
+        var _hash = window.location.hash;
+        // en
+        if(_hash == "#en"){
+            $select.selectedIndex = 1;
+            $en.style.display = "block";
+            $zh.style.display = "none";
+        // zh by default
+        }else{
+            // not trigger onChange, otherwise cause a loop call.
+            $select.selectedIndex = 0;
+            $zh.style.display = "block";
+            $en.style.display = "none";
+        }
+    }
+
+    // handle select change
+    function onLanChange(index){
+        if(index == 0){
+            window.location.hash = "#zh"
+        }else{
+            window.location.hash = "#en"
+        }
+    }
+
+    // init
+    _render();
+</script>
+
+
+
+{% if site.duoshuo_username %}
+<!-- 多说评论框 start -->
+<div class="comment">
+    <!-- This id is used for indexing my loss comments forcedly -->
+    <div class="ds-thread"
+    {% if site.duoshuo_username == "huxblog" %}
+        data-thread-id="1187623191091085319"
+    {% else %}
+    <!-- U can just use this key generated to index comments at page about -->
+        data-thread-key="{{site.duoshuo_username}}/about"
+    {% endif %}
+
+    data-title="{{page.title}}"
+    data-url="{{site.url}}/about/"></div>
+</div>
+<!-- 多说评论框 end -->
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    // dynamic User hacking by Hux
+    var _user = '{{site.duoshuo_username}}';
+
+    // duoshuo comment query.
+    var duoshuoQuery = {short_name: _user };
+    (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0]
+         || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+</script>
+<!-- 多说公共JS代码 end -->
+{% endif %}
+
+
+{% if site.disqus_username %}
+<!-- disqus 评论框 start -->
+<div class="comment">
+    <div id="disqus_thread" class="disqus-thread">
+
+    </div>
+</div>
+<!-- disqus 评论框 end -->
+
+<!-- disqus 公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES * * */
+    var disqus_shortname = "{{site.disqus_username}}";
+    var disqus_identifier = "{{site.disqus_username}}/{{page.url}}";
+    var disqus_url = "{{site.url}}{{page.url}}";
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<!-- disqus 公共JS代码 end -->
+{% endif %}
