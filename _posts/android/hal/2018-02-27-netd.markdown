@@ -1,0 +1,645 @@
+---
+layout:      post
+title:      "Netd中通信方式分析"
+subtitle:   "解析netd承上启下的通信功能（一）"
+navcolor:   "invert"
+date:       2018-02-27
+author:     "Cheson"
+catalog: true
+tags:
+    - Android
+    - frameworks
+    - Netd
+    - HAL
+---
+
+### Netd概述
+
+&emsp;&emsp;关于netd，想必做Android framework的同行们都不会陌生了，作为内容的开始还是先介绍下自己对netd的了解。netd在系统运行时以一个daemon进程的形式存在，在init.rc中自启主要代码位于system/netd目录下，也用到了system/libsysutil中的代码作为so库调用。而netd的主要作用跟其他很多的daemon也类似，用于连接kernel和framework，将kernel的事件转换上报给framework，也将framework的命令下发传递到kernel。netd的设计包含了很多值得学习的玄妙在里面，而这篇来解析下它能做到接收kernel消息并传递给framework的秘密。  
+
+### 自下而上
+
+&emsp;&emsp;Netd的通信功能包括了从kernel到framework和从framework到kernel两个部分，先看下一个消息是如何自下而上传递的。把一个完整的事件传递过程和涉及的类以及其在传递过程所起的作用概述放在前面，以便读者先有个宏观的了解，然后再来一步一步的剖析每一个环节的具体逻辑。  
+&emsp;&emsp;netd所涉及到的相关事件来源是kernel，以一个KOBJECT_EVENT的形式上报，由NetlinkHandler中的onEvent接收到，然后进一步将事件通知给SocketListener，SocketListener再通过sendMsg的方式交由SocketClient来处理，这里就会有java层的socket监听NativeDaemonConnector收到，经过对事件的解析和处理之后最终通过一个接口的callback交给了NetworkManagementService.NetdCallbackReceiver的onEvent来收到event，完成了将kernel事件从kernel上报到NMS的过程。其中涉及到了NetlinkManager（用于管理netd中NetlinkHandler的初始化和启动监听）、NetlinkHandler（处理kernel的事件和转发）、SocketListener（socket监听器，启动监听和接收socket事件）、SocketClient（实际的消息处理者，这里的作者用是通过它将event通过socket发送给java层）、NativeDaemonConnector（java层的socket通讯端，用于接收后面也用于下发事件）、NetworkManagementService（framework中网络相关的核心服务）。后面来一步步剖析下，每一小节的标题就代表了每一个核心步骤。  
+
+#### NetlinkHandler的初始化
+
+&emsp;&emsp;前面的总览中讲到了kernel的事件是在NetlinkHandler的onEvent中接收到的，这是个概括的第一大步，对于只想认识netd的同学是足够用来追踪代码了，而想了解这是如何实现的话那么就跟着往下看。  
+&emsp;&emsp;netd的代码入口是在`system/netd/main.cpp`中，在其main函数中有如下一段  
+```cpp
+int main() {
+  ...
+  NetlinkManager *nm;
+  ...
+  if (!(nm = NetlinkManager::Instance())) {
+      ALOGE("Unable to create NetlinkManager");
+      exit(1);
+  };
+  ...
+  if (nm->start()) {
+      ALOGE("Unable to start NetlinkManager (%s)", strerror(errno));
+      exit(1);
+  }
+  ...
+}
+```  
+&emsp;&emsp;NetlinkManager用于管理NetlinkHandler，在main函数中做了初始化，并调用了其start函数，来看下start函数里做了什么。  
+```cpp
+int NetlinkManager::start() {
+    if ((mUeventHandler = setupSocket(&mUeventSock, NETLINK_KOBJECT_UEVENT,
+         0xffffffff, NetlinkListener::NETLINK_FORMAT_ASCII)) == NULL) {
+        return -1;
+    }
+
+    if ((mRouteHandler = setupSocket(&mRouteSock, NETLINK_ROUTE,
+                                     RTMGRP_LINK |
+                                     RTMGRP_IPV4_IFADDR |
+                                     RTMGRP_IPV6_IFADDR,
+         NetlinkListener::NETLINK_FORMAT_BINARY)) == NULL) {
+        return -1;
+    }
+
+    if ((mQuotaHandler = setupSocket(&mQuotaSock, NETLINK_NFLOG,
+        NFLOG_QUOTA_GROUP, NetlinkListener::NETLINK_FORMAT_BINARY)) == NULL) {
+        ALOGE("Unable to open quota2 logging socket");
+        // TODO: return -1 once the emulator gets a new kernel.
+    }
+
+    return 0;
+}
+```  
+&emsp;&emsp;主要是setupSocket函数  
+```cpp
+NetlinkHandler *NetlinkManager::setupSocket(int *sock, int netlinkFamily,
+    int groups, int format) {
+
+    struct sockaddr_nl nladdr;
+    int sz = 64 * 1024;
+    int on = 1;
+
+    memset(&nladdr, 0, sizeof(nladdr));
+    nladdr.nl_family = AF_NETLINK;
+    nladdr.nl_pid = getpid();
+    nladdr.nl_groups = groups;
+
+    if ((*sock = socket(PF_NETLINK, SOCK_DGRAM, netlinkFamily)) < 0) {
+        ALOGE("Unable to create netlink socket: %s", strerror(errno));
+        return NULL;
+    }
+
+    if (setsockopt(*sock, SOL_SOCKET, SO_RCVBUFFORCE, &sz, sizeof(sz)) < 0) {
+        ALOGE("Unable to set uevent socket SO_RCVBUFFORCE option: %s", strerror(errno));
+        close(*sock);
+        return NULL;
+    }
+
+    if (setsockopt(*sock, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on)) < 0) {
+        SLOGE("Unable to set uevent socket SO_PASSCRED option: %s", strerror(errno));
+        close(*sock);
+        return NULL;
+    }
+
+    if (bind(*sock, (struct sockaddr *) &nladdr, sizeof(nladdr)) < 0) {
+        ALOGE("Unable to bind netlink socket: %s", strerror(errno));
+        close(*sock);
+        return NULL;
+    }
+
+    NetlinkHandler *handler = new NetlinkHandler(this, *sock, format);
+    if (handler->start()) {
+        ALOGE("Unable to start NetlinkHandler: %s", strerror(errno));
+        close(*sock);
+        return NULL;
+    }
+
+    return handler;
+}
+```  
+&emsp;&emsp;做的事情就是去bind了一个socket连接，而bind的目标地址根据传入的参数netlinkFamily可以找到就是NETLINK_KOBJECT_UEVENT，这个是和kernel里的socket配对的，所以这里也就是建立了netd和kernel通信的基础。  
+
+#### NetlinkHandler监听
+
+&emsp;&emsp;在socket绑定完之后就要开始去监听这个socket里传过来的消息了，在setupSocket函数的最后有一段调用了`handler->start()`，来追踪下这里发生了什么。  
+```cpp
+int NetlinkHandler::start() {
+    return this->startListener();
+}
+```  
+&emsp;&emsp;NetlinkHandler继承自NetlinkListener，而NetlinkListener又继承自SocketListener，在SocketListener里找到了startListener函数  
+```cpp
+int SocketListener::startListener() {
+    if (!mSocketName && mSock == -1) {
+        SLOGE("Failed to start unbound listener");
+        errno = EINVAL;
+        return -1;
+    } else if (mSocketName) {
+        if ((mSock = android_get_control_socket(mSocketName)) < 0) {
+            SLOGE("Obtaining file descriptor socket '%s' failed: %s",
+                 mSocketName, strerror(errno));
+            return -1;
+        }
+        SLOGV("got mSock = %d for %s", mSock, mSocketName);
+    }
+
+    if (mListen && listen(mSock, 4) < 0) {//1-1 开启socket监听
+        SLOGE("Unable to listen on socket (%s)", strerror(errno));
+        return -1;
+    } else if (!mListen)
+        mClients->push_back(new SocketClient(mSock, false, mUseCmdNum));
+
+    if (pipe(mCtrlPipe)) {
+        SLOGE("pipe failed (%s)", strerror(errno));
+        return -1;
+    }
+
+    if (pthread_create(&mThread, NULL, SocketListener::threadStart, this)) {//1-2 另起thread来接收并处理消息
+        SLOGE("pthread_create (%s)", strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
+```  
+&emsp;&emsp;两个关键的步骤也就是socket客户端会做的事情，1-1监听socket和1-2接收数据，只不过这里将接收的动作封装到了一个thread里去做，怕卡死主线程吧     
+```cpp
+void *SocketListener::threadStart(void *obj) {
+    SocketListener *me = reinterpret_cast<SocketListener *>(obj);
+
+    me->runListener();
+    pthread_exit(NULL);
+    return NULL;
+}
+```  
+&emsp;&emsp;这个threadStart就是个函数地址作为线程运行的入口，它里面实际用来接收socket消息还是调用了runListener函数  
+```cpp
+void SocketListener::runListener() {
+
+    SocketClientCollection *pendingList = new SocketClientCollection();
+
+    while(1) {
+        SocketClientCollection::iterator it;
+        fd_set read_fds;
+        int rc = 0;
+        int max = -1;
+
+        FD_ZERO(&read_fds);
+
+        if (mListen) {
+            max = mSock;
+            FD_SET(mSock, &read_fds);
+        }
+
+        FD_SET(mCtrlPipe[0], &read_fds);
+        if (mCtrlPipe[0] > max)
+            max = mCtrlPipe[0];
+
+        pthread_mutex_lock(&mClientsLock);
+        for (it = mClients->begin(); it != mClients->end(); ++it) {
+            int fd = (*it)->getSocket();
+            FD_SET(fd, &read_fds);
+            if (fd > max)
+                max = fd;
+        }
+        pthread_mutex_unlock(&mClientsLock);
+        SLOGE("mListen=%d, max=%d, mSocketName=%s", mListen, max, mSocketName);
+        if ((rc = select(max + 1, &read_fds, NULL, NULL, NULL)) < 0) {
+            if (errno == EINTR)
+                continue;
+            SLOGE("select failed (%s) mListen=%d, max=%d", strerror(errno), mListen, max);
+            sleep(1);
+            continue;
+        } else if (!rc)
+            continue;
+
+        if (FD_ISSET(mCtrlPipe[0], &read_fds))
+            break;
+        if (mListen && FD_ISSET(mSock, &read_fds)) {
+            struct sockaddr addr;
+            socklen_t alen;
+            int c;
+
+            do {
+                alen = sizeof(addr);
+                c = accept(mSock, &addr, &alen);//2-1获取socket
+                SLOGE("%s got %d from accept", mSocketName, c);
+            } while (c < 0 && errno == EINTR);
+            if (c < 0) {
+                SLOGE("accept failed (%s)", strerror(errno));
+                sleep(1);
+                continue;
+            }
+            pthread_mutex_lock(&mClientsLock);
+            mClients->push_back(new SocketClient(c, true, mUseCmdNum));//2-2根据socket构造SocketClient并加入到mClients这个列表中
+            pthread_mutex_unlock(&mClientsLock);
+        }
+
+        /* Add all active clients to the pending list first */
+        pendingList->clear();
+        pthread_mutex_lock(&mClientsLock);
+        for (it = mClients->begin(); it != mClients->end(); ++it) {
+            int fd = (*it)->getSocket();
+            if (FD_ISSET(fd, &read_fds)) {
+                pendingList->push_back(*it);
+            }
+        }
+        pthread_mutex_unlock(&mClientsLock);
+
+        /* Process the pending list, since it is owned by the thread,
+         * there is no need to lock it */
+        while (!pendingList->empty()) {
+            /* Pop the first item from the list */
+            it = pendingList->begin();
+            SocketClient* c = *it;
+            pendingList->erase(it);
+            /* Process it, if false is returned and our sockets are
+             * connection-based, remove and destroy it */
+            if (!onDataAvailable(c) && mListen) {//2-3调用onDataAvailable来做下一步的消息传递
+                /* Remove the client from our array */
+                SLOGV("going to zap %d for %s", c->getSocket(), mSocketName);
+                pthread_mutex_lock(&mClientsLock);
+                for (it = mClients->begin(); it != mClients->end(); ++it) {
+                    if (*it == c) {
+                        mClients->erase(it);
+                        break;
+                    }
+                }
+                pthread_mutex_unlock(&mClientsLock);
+                /* Remove our reference to the client */
+                c->decRef();
+            }
+        }
+    }
+    delete pendingList;
+}
+```  
+&emsp;&emsp;这个函数比较长，而比较关键的几步就是2-1向服务端提供地址确立连接，2-2将连接成功后返回的socketFd封装成一个SocketClient并加入到一个集合的数据结构中，2-3便利SocketClient这个集合，并调用onDataAvailable方法来做下一步操作，就接着这个继续来看。  
+&emsp;&emsp;onDataAvailable方法的实现是在NetlinkListener中  
+```cpp
+bool NetlinkListener::onDataAvailable(SocketClient *cli)
+{
+    int socket = cli->getSocket();
+    ssize_t count;
+    uid_t uid = -1;
+
+    count = TEMP_FAILURE_RETRY(uevent_kernel_multicast_uid_recv(
+                                       socket, mBuffer, sizeof(mBuffer), &uid));//3-1通过recv函数将socket的信息读到mBuffer中
+    if (count < 0) {
+        if (uid > 0)
+            LOG_EVENT_INT(65537, uid);
+        SLOGE("recvmsg failed (%s)", strerror(errno));
+        return false;
+    }
+
+    NetlinkEvent *evt = new NetlinkEvent();
+    if (!evt->decode(mBuffer, count, mFormat)) {//3-2将mBuffer中的内容解析成一个NetlinkEvent
+        SLOGE("Error decoding NetlinkEvent");
+    } else {
+        onEvent(evt);//3-3调用onEvent
+    }
+
+    delete evt;
+    return true;
+}
+```  
+&emsp;&emsp;在onDataAvailable函数中先从SocketClient中的读到了socketFd，然后通过封装的recv函数去将socket中的数据读到了mBuffer中，接下来构造了一个NetlinkEvent对象，该对象就是对每个网络事件的封装，最后调用了onEvent函数来分下下去这个Event，到这里第一大步就完成了，kernel的事件通过socket传递到了NetlinkHandler的onEvent中。  
+&emsp;&emsp;再来回顾下这第一步的全程：1、在main函数中通过NetlinkManager初始化了NetlinkHandler并调用起start函数；2、在start函数中通过setupSocket函数建立的socket，并通过起线程的方式在独立线程中去监听socket；3、在threadStart函数中调用runListener函数来接收socket信息，并将socketFd封装成一个SocketClient并放入到集合中；4、通过onDataAvailable函数分发到每个NetlinkListener中；5、读取到socket的内容封装成NetlinkEvent调用onEvent函数传递到NetlinkHandler中。  
+
+#### NetlinkHandler事件处理
+
+&emsp;&emsp;在NetlinkHandler中的onEvent里会去解析NetlinkEvent对象的内容，根据不用的事件类型来做相应的处理，onEvent的函数内容如下  
+```cpp
+void NetlinkHandler::onEvent(NetlinkEvent *evt) {
+    const char *subsys = evt->getSubsystem();
+    if (!subsys) {
+        ALOGW("No subsystem found in netlink event");
+        return;
+    }
+
+    if (!strcmp(subsys, "net")) {//事件类型
+        int action = evt->getAction();//行为类型
+        const char *iface = evt->findParam("INTERFACE");
+
+        if (action == evt->NlActionAdd) {
+            notifyInterfaceAdded(iface);
+        } else if (action == evt->NlActionRemove) {
+            notifyInterfaceRemoved(iface);
+        } else if (action == evt->NlActionChange) {
+            evt->dump();
+            notifyInterfaceChanged("nana", true);
+        } else if (action == evt->NlActionLinkUp) {
+            notifyInterfaceLinkChanged(iface, true);
+        } else if (action == evt->NlActionLinkDown) {
+            notifyInterfaceLinkChanged(iface, false);
+        } else if (action == evt->NlActionAddressUpdated ||
+                   action == evt->NlActionAddressRemoved) {
+            const char *address = evt->findParam("ADDRESS");
+            const char *flags = evt->findParam("FLAGS");
+            const char *scope = evt->findParam("SCOPE");
+            if (iface && flags && scope) {
+                notifyAddressChanged(action, address, iface, flags, scope);
+            }
+        }
+
+    } else if (!strcmp(subsys, "qlog")) {
+        const char *alertName = evt->findParam("ALERT_NAME");
+        const char *iface = evt->findParam("INTERFACE");
+        notifyQuotaLimitReached(alertName, iface);
+
+    } else if (!strcmp(subsys, "xt_idletimer")) {
+        int action = evt->getAction();
+        const char *label = evt->findParam("LABEL");
+        const char *state = evt->findParam("STATE");
+        // if no LABEL, use INTERFACE instead
+        if (label == NULL) {
+            label = evt->findParam("INTERFACE");
+        }
+        if (state)
+            notifyInterfaceClassActivity(label, !strcmp("active", state));
+
+#if !LOG_NDEBUG
+    } else if (strcmp(subsys, "platform") && strcmp(subsys, "backlight")) {
+        /* It is not a VSYNC or a backlight event */
+        ALOGV("unexpected event from subsystem %s", subsys);
+#endif
+    }
+}
+```  
+&emsp;&emsp;以添加网卡的事件为例（其他事件也是类似），在onEvent中先去获取subsys为net类型，然后再取到action为NlActionAdd，就调用notifyInterfaceAdded函数来通知网卡添加的事件。  
+```cpp
+void NetlinkHandler::notifyInterfaceAdded(const char *name) {
+    char msg[255];
+    snprintf(msg, sizeof(msg), "Iface added %s", name);
+
+    mNm->getBroadcaster()->sendBroadcast(ResponseCode::InterfaceChange,
+            msg, false);
+}
+```  
+&emsp;emsp;先构造了msg字串，从NetlinkManager.h中可以看到getBroadcaster函数取到的是SocketListener指针，所以后面是通过SocketListener的sendBroadcast发送了一个code和包含的消息内容。  
+
+#### netd发送消息给framework
+
+&emsp;&emsp;接上一步的内容，在SocketListener中调用了sendBroadcast来准备向framework发送消息  
+```cpp
+void SocketListener::sendBroadcast(int code, const char *msg, bool addErrno) {
+    pthread_mutex_lock(&mClientsLock);
+    SocketClientCollection::iterator i;
+
+    for (i = mClients->begin(); i != mClients->end(); ++i) {
+        SLOGD("SocketListener::sendBroadcast code=%d, msg=%s", code, msg); 
+        // broadcasts are unsolicited and should not include a cmd number
+        if ((*i)->sendMsg(code, msg, addErrno, false)) {
+            SLOGW("Error sending broadcast (%s)", strerror(errno));
+        }
+    }
+    pthread_mutex_unlock(&mClientsLock);
+}
+```  
+&emsp;&emsp;所做的事情就是遍历所有的SocketClient来调用sendMsg函数  
+```cpp
+int SocketClient::sendMsg(int code, const char *msg, bool addErrno, bool useCmdNum) {
+    char *buf;
+    int ret = 0;
+
+    if (addErrno) {
+        if (useCmdNum) {
+            ret = asprintf(&buf, "%d %d %s (%s)", code, getCmdNum(), msg, strerror(errno));
+        } else {
+            ret = asprintf(&buf, "%d %s (%s)", code, msg, strerror(errno));
+        }
+    } else {
+        if (useCmdNum) {
+            ret = asprintf(&buf, "%d %d %s", code, getCmdNum(), msg);
+        } else {
+            ret = asprintf(&buf, "%d %s", code, msg);
+        }
+    }
+    /* Send the zero-terminated message */
+    if (ret != -1) {
+        ret = sendMsg(buf);//将code和msg构造成一个buf，然后发送
+        free(buf);
+    }
+    return ret;
+}
+``` 
+&emsp;&emsp;所做的就是根据传入的两个控制条件，将code和msg两个信息构造成一个消息体再调用一个参数的sendMsg函数  
+```cpp
+int SocketClient::sendMsg(const char *msg) {
+    // Send the message including null character
+    if (sendData(msg, strlen(msg) + 1) != 0) {
+        SLOGW("Unable to send msg '%s'", msg);
+        return -1;
+    }
+    return 0;
+}
+
+int SocketClient::sendData(const void *data, int len) {
+
+    pthread_mutex_lock(&mWriteMutex);
+    int rc = sendDataLocked(data, len);
+    pthread_mutex_unlock(&mWriteMutex);
+
+    return rc;
+}
+
+int SocketClient::sendDataLocked(const void *data, int len) {
+    int rc = 0;
+    const char *p = (const char*) data;
+    int brtw = len;
+
+    if (mSocket < 0) {
+        errno = EHOSTUNREACH;
+        return -1;
+    }
+
+    if (len == 0) {
+        return 0;
+    }
+
+    while (brtw > 0) {
+        rc = send(mSocket, p, brtw, MSG_NOSIGNAL);//将内容p写入到socket中
+        if (rc > 0) {
+            p += rc;
+            brtw -= rc;
+            continue;
+        }
+
+        if (rc < 0 && errno == EINTR)
+            continue;
+
+        if (rc == 0) {
+            SLOGW("0 length write :(");
+            errno = EIO;
+        } else {
+            SLOGW("write error (%s)", strerror(errno));
+        }
+        return -1;
+    }
+    return 0;
+}
+```  
+&emsp;&emsp;有意义的内容在sendDataLocked函数中，所做的也就是通过这个SocketClient中的mSocket，在已经建立好的socket连接中写入数据p，到这里netd中将NetlinkEvent的内容解析并通过SocketClient写入到socket中的步骤就完成了。  
+
+#### framework中的socket建立和消息接收
+
+&emsp;&emsp;每个人在面对不同人和事的时候就会变成不同的角色，而netd也正是如此，在面对kernel上报的信息时它就是客户端，而在面对framework时它又成了服务端。来看下framework是如何接收到netd作为服务端转发过来的网络事件的。  
+&emsp;&emsp;framework是在哪里接收netd的消息呢，从源头开始讲起。在启动启动时SystemServer中会创建NetworkManagementService服务`networkManagement = NetworkManagementService.create(context);`，来看下这个create方法  
+```java
+static NetworkManagementService create(Context context,
+            String socket) throws InterruptedException {
+    final NetworkManagementService service = new NetworkManagementService(context, socket);
+    final CountDownLatch connectedSignal = service.mConnectedSignal;
+    if (DBG) Slog.d(TAG, "Creating NetworkManagementService");
+    service.mThread.start();
+    if (DBG) Slog.d(TAG, "Awaiting socket connection");
+    connectedSignal.await();
+    if (DBG) Slog.d(TAG, "Connected");
+    return service;
+}
+
+public static NetworkManagementService create(Context context) throws InterruptedException {
+    return create(context, NETD_SOCKET_NAME);//NETD_SOCKET_NAME = "netd"
+}
+```  
+&emsp；&emsp;单参的create方法传入的第二个参数就是netd的socket名称常量（netd），然后调用到两参的create方法，其中调用了NetworkManagementService的构造函数，传入了socket的名称，从此socket的名称去判断，这里应该就是我们要去探寻的跟netd联结的socket源头了。在构造函数中根据socket名称的走向找到了这一句   
+```java
+mConnector = new NativeDaemonConnector(
+        new NetdCallbackReceiver(), socket, 10, NETD_TAG, 160);
+mThread = new Thread(mConnector, NETD_TAG);
+```  
+&emsp;&emsp;NativeDaemonConnector实现了Runnable，并且被作为参数来创建了mThread，而在create方法中，调用构造函数之后就调用了`service.mThread.start()`，这使得流程就如到了NativeDaemonConnector的run方法中。  
+```java
+public void run() {
+    mCallbackHandler = new Handler(FgThread.get().getLooper(), this);
+
+    while (true) {
+        try {
+            listenToSocket();
+        } catch (Exception e) {
+            loge("Error in NativeDaemonConnector: " + e);
+            SystemClock.sleep(5000);
+        }
+    }
+}
+```  
+&emsp;&emsp;在run方法中一个死循环然后一眼看到的核心就listenToSocket方法  
+```java
+    private void listenToSocket() throws IOException {
+        LocalSocket socket = null;
+
+        try {
+            socket = new LocalSocket();
+            LocalSocketAddress address = determineSocketAddress();
+
+            socket.connect(address);//4-1客户端建立socket连接
+
+            InputStream inputStream = socket.getInputStream();//4-2读取socket内容
+            synchronized (mDaemonLock) {
+                mOutputStream = socket.getOutputStream();
+            }
+
+            mCallbacks.onDaemonConnected();
+
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int start = 0;
+
+            while (true) {
+                int count = inputStream.read(buffer, start, BUFFER_SIZE - start);
+                if (count < 0) {
+                    loge("got " + count + " reading with start = " + start);
+                    break;
+                }
+
+                // Add our starting point to the count and reset the start.
+                count += start;
+                start = 0;
+
+                for (int i = 0; i < count; i++) {
+                    if (buffer[i] == 0) {
+                        final String rawEvent = new String(
+                                buffer, start, i - start, StandardCharsets.UTF_8);//4-3构造出rawEvent
+                        log("RCV <- {" + rawEvent + "}");
+
+                        try {
+                            final NativeDaemonEvent event = NativeDaemonEvent.parseRawEvent(
+                                    rawEvent);//4-4解析rawEvent
+                            if (event.isClassUnsolicited()) {//4-5验证消息类型
+                                // TODO: migrate to sending NativeDaemonEvent instances
+                                mCallbackHandler.sendMessage(mCallbackHandler.obtainMessage(
+                                        event.getCode(), event.getRawEvent()));//4-6给消息队列发送消息
+                            } else {
+                                mResponseQueue.add(event.getCmdNumber(), event);
+                            }
+                        } catch (IllegalArgumentException e) {
+                            log("Problem parsing message: " + rawEvent + " - " + e);
+                        }
+
+                        start = i + 1;
+                    }
+                }
+                if (start == 0) {
+                    final String rawEvent = new String(buffer, start, count, StandardCharsets.UTF_8);
+                    log("RCV incomplete <- {" + rawEvent + "}");
+                }
+
+                // We should end at the amount we read. If not, compact then
+                // buffer and read again.
+                if (start != count) {
+                    final int remaining = BUFFER_SIZE - start;
+                    System.arraycopy(buffer, start, buffer, 0, remaining);
+                    start = remaining;
+                } else {
+                    start = 0;
+                }
+            }
+        } catch (IOException ex) {
+            loge("Communications error: " + ex);
+            throw ex;
+        } finally {
+            synchronized (mDaemonLock) {
+                if (mOutputStream != null) {
+                    try {
+                        loge("closing stream for " + mSocket);
+                        mOutputStream.close();
+                    } catch (IOException e) {
+                        loge("Failed closing output stream: " + e);
+                    }
+                    mOutputStream = null;
+                }
+            }
+
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException ex) {
+                loge("Failed closing socket: " + ex);
+            }
+        }
+    }
+```  
+&emsp;&emsp;这一大段就是framework里建立socket并去读取netd发来消息的内容：4-1和服务端建立socket通讯；4-2读取socket数据；4-3解析rawEvent，在前面netd发送数据时已经介绍了，数据是会有可能由code和msg以及其他的一些错误信息拼接而成的，而这里解析的作用就是将这些信息再拆开还原成code和msg以及其他附加信息；4-5验证code的有效性，这一步的设计意义没有理解到设计者的用途，而表现的现象就是在NetworkManagementService中onEvent里收到的消息里code都是介于600-700之间的，这个code对应的事件类型的列表可以参考netd中的ResponseCode.h，或者在NetworkManagementService中也可以查询到，这两方面是对应的；4-6针对code在600-700之前的事件，例如网卡add和up这类情景就会在这里处理，将消息发给NativeDaemonConnector的消息队列，那么根据经验下一步就是来看消息队列的handleMessage方法了  
+```java
+public boolean handleMessage(Message msg) {
+    String event = (String) msg.obj;
+    try {
+        if (!mCallbacks.onEvent(msg.what, event, NativeDaemonEvent.unescapeArgs(event))) {
+            log(String.format("Unhandled event '%s'", event));
+        }
+    } catch (Exception e) {
+        loge("Error handling '" + event + "': " + e);
+    }
+    return true;
+}
+```  
+&emsp;&emsp;看到了`mCallbacks.onEvent`，这个mCallbacks是INativeDaemonConnectorCallbacks接口类型，在NetworkManagementService.NetdCallbackReceiver实现，也就是消息会传递到这里的onEvent中，而我一般去分析网络日志的时候也会把这里的日志作为重点捞出来，作为观测网络事件的一个重要依据。那么到此netd的发送的事件也就被framework的socket接收到了，并做了处理和转发，一直到了NetworkManagementService中。
+
+
+
+
+
+
+
+
+
+
+
